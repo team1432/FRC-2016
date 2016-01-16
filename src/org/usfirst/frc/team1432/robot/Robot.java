@@ -1,6 +1,9 @@
 
 package org.usfirst.frc.team1432.robot;
 
+import org.usfirst.frc.team1432.robot.*;
+import org.usfirst.frc.team1432.robot.commands.*;
+import org.usfirst.frc.team1432.robot.subsystems.*;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
@@ -9,6 +12,7 @@ import org.usfirst.frc.team1432.robot.commands.ExampleCommand;
 import org.usfirst.frc.team1432.robot.subsystems.ExampleSubsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -19,7 +23,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class Robot extends IterativeRobot {
 
-	public static final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
+	public static final arm Arm = new arm();
 	public static OI oi;
 
     Command autonomousCommand;

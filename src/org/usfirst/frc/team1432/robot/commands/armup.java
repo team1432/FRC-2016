@@ -2,17 +2,17 @@
 package org.usfirst.frc.team1432.robot.commands;
 
 import edu.wpi.first.wpilibj.command.Command;
-
-import org.usfirst.frc.team1432.robot.Robot;
+import org.usfirst.frc.team1432.robot.*;
+import org.usfirst.frc.team1432.robot.subsystems.arm;
 
 /**
  *
  */
-public class ExampleCommand extends Command {
+public class armup extends Command {
 
-    public ExampleCommand() {
+    public armup() {
         // Use requires() here to declare subsystem dependencies
-        requires(Robot.exampleSubsystem);
+        requires(Robot.arm);
     }
 
     // Called just before this Command runs the first time
