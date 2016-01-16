@@ -1,17 +1,14 @@
 
 package org.usfirst.frc.team1432.robot;
 
-import org.usfirst.frc.team1432.robot.*;
-import org.usfirst.frc.team1432.robot.commands.*;
 import org.usfirst.frc.team1432.robot.subsystems.*;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
-import org.usfirst.frc.team1432.robot.commands.ExampleCommand;
-import org.usfirst.frc.team1432.robot.subsystems.ExampleSubsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.usfirst.frc.team1432.robot.commands.*;
 
 
 /**
@@ -25,7 +22,6 @@ public class Robot extends IterativeRobot {
 
 	public static final arm Arm = new arm();
 	public static OI oi;
-
     Command autonomousCommand;
     SendableChooser chooser;
 
@@ -36,7 +32,7 @@ public class Robot extends IterativeRobot {
     public void robotInit() {
 		oi = new OI();
         chooser = new SendableChooser();
-        chooser.addDefault("Default Auto", new ExampleCommand());
+        //chooser.addDefault("Default Auto", new arm());
 //        chooser.addObject("My Auto", new MyAutoCommand());
         SmartDashboard.putData("Auto mode", chooser);
     }
@@ -77,7 +73,7 @@ public class Robot extends IterativeRobot {
 			break;
 		} */
     	
-    	// schedule the autonomous command (example)
+    	// schedule the autonomous command ()
         if (autonomousCommand != null) autonomousCommand.start();
     }
 
@@ -89,11 +85,13 @@ public class Robot extends IterativeRobot {
     }
 
     public void teleopInit() {
+    	armup au = new armup();
+    	au.start();
 		// This makes sure that the autonomous stops running when
         // teleop starts running. If you want the autonomous to 
         // continue until interrupted by another command, remove
         // this line or comment it out.
-        if (autonomousCommand != null) autonomousCommand.cancel();
+        //if (autonomousCommand != null) autonomousCommand.cancel();
     }
 
     /**
