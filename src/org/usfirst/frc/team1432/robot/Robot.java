@@ -3,12 +3,15 @@ package org.usfirst.frc.team1432.robot;
 
 import org.usfirst.frc.team1432.robot.subsystems.*;
 import edu.wpi.first.wpilibj.IterativeRobot;
+import edu.wpi.first.wpilibj.RobotDrive;
+import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.usfirst.frc.team1432.robot.commands.*;
+import edu.wpi.first.wpilibj.CameraServer;
 
 
 /**
@@ -19,7 +22,8 @@ import org.usfirst.frc.team1432.robot.commands.*;
  * directory.
  */
 public class Robot extends IterativeRobot {
-
+	CameraServer server;
+	RobotDrive drive;
 	public static final arm Arm = new arm();
 	public static OI oi;
     Command autonomousCommand;
@@ -31,10 +35,16 @@ public class Robot extends IterativeRobot {
      */
     public void robotInit() {
 		oi = new OI();
+		setupdrive();
+		SmartDashboard.putString("message", "");
         chooser = new SendableChooser();
         //chooser.addDefault("Default Auto", new arm());
 //        chooser.addObject("My Auto", new MyAutoCommand());
         SmartDashboard.putData("Auto mode", chooser);
+        server = CameraServer.getInstance();
+        server.setQuality(100);
+        //the camera name (ex "cam0") can be found through the roborio web interface
+        server.startAutomaticCapture("cam0");
     }
 	
 	/**
@@ -43,15 +53,13 @@ public class Robot extends IterativeRobot {
 	 * the robot is disabled.
      */
     public void disabledInit(){
-
     }
 	
 	public void disabledPeriodic() {
 		Scheduler.getInstance().run();
 	}
-
 	/**
-	 * This autonomous (along with the chooser code above) shows how to select between different autonomous modes
+	 * This autonomous (along with the chooser code above) shows 	how to select between different autonomous modes
 	 * using the dashboard. The sendable chooser code works with the Java SmartDashboard. If you prefer the LabVIEW
 	 * Dashboard, remove all of the chooser code and uncomment the getString code to get the auto name from the text box
 	 * below the Gyro
@@ -85,9 +93,9 @@ public class Robot extends IterativeRobot {
     }
 
     public void teleopInit() {
-    	armup au = new armup();
-    	au.start();
-		// This makes sure that the autonomous stops running when
+    	print("Started Teleop");
+    	new armup().start();
+    	// This makes sure that the autonomous stops running when
         // teleop starts running. If you want the autonomous to 
         // continue until interrupted by another command, remove
         // this line or comment it out.
@@ -98,7 +106,22 @@ public class Robot extends IterativeRobot {
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
+    	drive();
         Scheduler.getInstance().run();
+    }
+    
+    public void setupdrive() {
+    	Talon driveleft = new Talon (RobotMap.leftwheels);
+		Talon driveright = new Talon (RobotMap.rightwheels);
+		drive = new RobotDrive(driveleft, driveright);	
+    }
+    
+    public void drive() {
+    	drive.arcadeDrive(oi.controller, true);
+    }
+    
+    public void print(String string) {
+    	System.out.print(string);
     }
     
     /**

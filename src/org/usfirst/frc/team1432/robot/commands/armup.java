@@ -27,7 +27,7 @@ public class armup extends Command {
 
     // Make this return true when this Command no longer needs to run execute()
     protected boolean isFinished() {
-    	Timer.delay(2);
+    	//Timer.delay(2);
     	return true;
     }
 
