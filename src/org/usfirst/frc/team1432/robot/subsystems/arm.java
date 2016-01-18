@@ -10,6 +10,11 @@ import edu.wpi.first.wpilibj.*;
  */
 public class arm extends Subsystem {
     Talon lowerarm = new Talon (RobotMap.joint1motor);
+    double D;
+    int arm1;
+    int arm2;
+    double angle1;
+    int angle2;
     // Put methods for controlling this subsystem
     // here. Call these from Commands.
 
@@ -18,14 +23,12 @@ public class arm extends Subsystem {
         //setDefaultCommand(new MySpecialCommand());
     }
     
-    public void up(){
-    	lowerarm.set(1);
+    public void setYVelocity(){
+    	D = (arm1*Math.cos(angle1))+(arm2*Math.cos(180-(angle1+angle2)));
     }
-    public void down() {
-    	lowerarm.set(-1);
-    }
-    public void off(){
-    	lowerarm.set(0);
+    
+    public void setYPosition(){
+    	
     }
 }
 
