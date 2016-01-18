@@ -10,11 +10,13 @@ import edu.wpi.first.wpilibj.*;
  */
 public class arm extends Subsystem {
     Talon lowerarm = new Talon (RobotMap.joint1motor);
+    Talon upperarm = new Talon (RobotMap.joint2motor);
     double D;
     int arm1;
     int arm2;
     double angle1;
     int angle2;
+    double portcullisAngle = 5;
     // Put methods for controlling this subsystem
     // here. Call these from Commands.
 
@@ -23,12 +25,24 @@ public class arm extends Subsystem {
         //setDefaultCommand(new MySpecialCommand());
     }
     
-    public void setYVelocity(){
-    	D = (arm1*Math.cos(angle1))+(arm2*Math.cos(180-(angle1+angle2)));
+    public void setYVelocity(double velo) {
+    	lowerarm.set(velo);
+    	SafeDistance();
     }
-    
-    public void setYPosition(){
-    	
-    }
+    public void SafeDistance() {
+		D = (arm1*Math.cos(angle1))+(arm2*Math.cos(180-(angle1+angle2)));
+		while (D > 14){
+			lowerarm.set(-.1);
+		}
+		while (D < 13) {
+			lowerarm.set(.1);
+		}
+		lowerarm.set(0);    	
+	}
+    public void portcullis(){
+    	while (angle1 < portcullisAngle){
+    		setYVelocity(1);
+    	}
+    	setYVelocity(0);
+	}
 }
-
