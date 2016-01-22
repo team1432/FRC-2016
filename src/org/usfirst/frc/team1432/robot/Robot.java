@@ -10,8 +10,8 @@ import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import org.usfirst.frc.team1432.robot.commands.*;
 import edu.wpi.first.wpilibj.CameraServer;
+
 
 
 /**
@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.CameraServer;
  * directory.
  */
 public class Robot extends IterativeRobot {
+	Encoder armEncoder;
 	CameraServer server;
 	RobotDrive drive;
 	public static final arm Arm = new arm();
@@ -33,18 +34,21 @@ public class Robot extends IterativeRobot {
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
-    public void robotInit() {
-		oi = new OI();
+    public void robotInit() {    	
+    	oi = new OI();
 		setupdrive();
 		SmartDashboard.putString("message", "");
         chooser = new SendableChooser();
         //chooser.addDefault("Default Auto", new arm());
-//        chooser.addObject("My Auto", new MyAutoCommand());
+        //chooser.addObject("My Auto", new MyAutoCommand());
         SmartDashboard.putData("Auto mode", chooser);
         server = CameraServer.getInstance();
         server.setQuality(100);
         //the camera name (ex "cam0") can be found through the roborio web interface
         server.startAutomaticCapture("cam0");
+    	armEncoder = new Encoder(0, Arm.lowerarm);
+    	armEncoder.start();
+    	//armEncoder.stoprun();
     }
 	
 	/**
@@ -94,6 +98,9 @@ public class Robot extends IterativeRobot {
 
     public void teleopInit() {
     	print("Started Teleop");
+    	armEncoder.reset();
+    	Arm.lowerarm.set(.01);
+    	print(armEncoder.getvalue());
     	// This makes sure that the autonomous stops running when
         // teleop starts running. If you want the autonomous to 
         // continue until interrupted by another command, remove
@@ -105,6 +112,7 @@ public class Robot extends IterativeRobot {
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
+    	print(armEncoder.getRotations());
     	drive();
         Scheduler.getInstance().run();
     }
@@ -112,7 +120,7 @@ public class Robot extends IterativeRobot {
     public void setupdrive() {
     	Talon driveleft = new Talon (RobotMap.leftwheels);
 		Talon driveright = new Talon (RobotMap.rightwheels);
-		drive = new RobotDrive(driveleft, driveright);	
+		drive = new RobotDrive(driveleft, driveright);
     }
     
     public void drive() {
@@ -120,13 +128,24 @@ public class Robot extends IterativeRobot {
     }
     
     public void print(String string) {
-    	System.out.print(string);
+    	System.out.println(string);
     }
     
+    public void print(double Double){
+    	System.out.println(Double);
+    }
+    
+    public void print(int Int) {
+    	System.out.println(Int);
+    }
     /**
      * This function is called periodically during test mode
      */
-    public void testPeriodic() {
+
+	public void testPeriodic() {
+		print(armEncoder.getRotations());
+		//armEncoder.run();
         LiveWindow.run();
+        //print(armEncoder.getvalue());
     }
 }

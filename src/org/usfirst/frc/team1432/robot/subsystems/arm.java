@@ -9,8 +9,8 @@ import edu.wpi.first.wpilibj.*;
  *
  */
 public class arm extends Subsystem {
-    Talon lowerarm = new Talon (RobotMap.joint1motor);
-    Talon upperarm = new Talon (RobotMap.joint2motor);
+    public Talon lowerarm = new Talon (RobotMap.joint1motor);
+    public Talon upperarm = new Talon (RobotMap.joint2motor);
     double D;
     int arm1;
     int arm2;
@@ -25,8 +25,8 @@ public class arm extends Subsystem {
         //setDefaultCommand(new MySpecialCommand());
     }
     
-    public void setYVelocity(double velo) {
-    	lowerarm.set(velo);
+    public void setYVelocity(double velocity) {
+    	lowerarm.set(velocity);
     	SafeDistance();
     }
     public void SafeDistance() {
