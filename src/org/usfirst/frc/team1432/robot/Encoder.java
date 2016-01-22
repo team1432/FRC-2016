@@ -14,14 +14,14 @@ public class Encoder extends Thread {
 	double current;
 	double previous;
 	double rotations;
-	double fractionRotations;
 	double currentAngle;
-	public static double degreesPerRotation = 1;
+	public static double degreesPerRotation = 360;
+	public static double inchesPerRotation = 0.8853826956614173;
+	public static double centemetersPerRotation = 2.24887204698;
 	Talon sensorMotor;
 	private ReentrantLock lock;
 	private Thread thread; 
 	private Boolean cont;
-	
 	
 	public Encoder(int port, Talon motor) {
 		cont = false;
@@ -36,9 +36,9 @@ public class Encoder extends Thread {
 	/*
 	 * Gets double value from input 
 	 */
-	public double getvalue(){
+	public double getValue(){
 		lock.lock();
-		double value = input.getVoltage();
+		double value = round(input.getVoltage()/5);
 		lock.unlock();
 		return value;
 	}
@@ -49,12 +49,8 @@ public class Encoder extends Thread {
 		previous = 0;
 	}
 	
-	private void updateAngle(){
-		double decimal;
-		decimal = current / 5;
-		lock.lock();
-		currentAngle = (rotations + decimal)*degreesPerRotation;
-		lock.unlock();
+	public double round(double value){
+		return Math.round((value) * 100d) / 100d;
 	}
 	
 	public void print(String string) {
@@ -70,8 +66,17 @@ public class Encoder extends Thread {
     }
     
     public double getRotations(){
-    	return rotations;
+    	return round(rotations + current);
     }
+	public double getDegrees(){
+		return round((current+rotations)*degreesPerRotation);
+	}
+	public double getCM(){
+		return round((current+rotations)*centemetersPerRotation);
+	}
+	public double getInches(){
+		return round((current+rotations)*inchesPerRotation);
+	}
     
 	@Override
 	public void run() {
@@ -80,18 +85,15 @@ public class Encoder extends Thread {
 			if (sensorMotor != null){
 				previous = current;
 				lock.lock();
-				current = input.getVoltage();
+				current = round(input.getVoltage()/5);
 				lock.unlock();
-				if (sensorMotor.get() < 0 &&  current - previous < 0) {
-					print("rotations++");
+				if (sensorMotor.get() < 0 &&  current - previous < -0.5) {
 					rotations ++;
 				}
-				else if (sensorMotor.get() > 0 && current - previous > 0){
+				else if (sensorMotor.get() > 0 && current - previous > 0.5){
 					rotations --;
-					print("rotations--");
 				}
-				updateAngle();
-				}
+			}
 			lock.lock();
 			running = cont;
 			lock.unlock();

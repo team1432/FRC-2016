@@ -99,8 +99,7 @@ public class Robot extends IterativeRobot {
     public void teleopInit() {
     	print("Started Teleop");
     	armEncoder.reset();
-    	Arm.lowerarm.set(.01);
-    	print(armEncoder.getvalue());
+    	Arm.lowerarm.set(-.05);
     	// This makes sure that the autonomous stops running when
         // teleop starts running. If you want the autonomous to 
         // continue until interrupted by another command, remove
@@ -112,7 +111,10 @@ public class Robot extends IterativeRobot {
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
-    	print(armEncoder.getRotations());
+    	print(armEncoder.getRotations()+"Rotations");
+    	print(armEncoder.getCM() + "CM");
+    	print(armEncoder.getDegrees()+"Degrees");
+    	print(armEncoder.getInches()+"IN");
     	drive();
         Scheduler.getInstance().run();
     }
@@ -143,7 +145,7 @@ public class Robot extends IterativeRobot {
      */
 
 	public void testPeriodic() {
-		print(armEncoder.getRotations());
+		print(armEncoder.getValue());
 		//armEncoder.run();
         LiveWindow.run();
         //print(armEncoder.getvalue());
