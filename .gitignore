@@ -3,6 +3,9 @@ bin/
 Thumbs.db
 ehthumbs.db
 
+dist/
+dist\
+
 # Folder config file
 Desktop.ini
 

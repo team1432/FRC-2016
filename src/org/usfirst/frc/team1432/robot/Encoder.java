@@ -83,10 +83,12 @@ public class Encoder extends Thread {
 				current = input.getVoltage();
 				lock.unlock();
 				if (sensorMotor.get() < 0 &&  current - previous < 0) {
+					print("rotations++");
 					rotations ++;
 				}
 				else if (sensorMotor.get() > 0 && current - previous > 0){
 					rotations --;
+					print("rotations--");
 				}
 				updateAngle();
 				}
