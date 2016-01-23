@@ -1,7 +1,6 @@
 
 package org.usfirst.frc.team1432.robot;
 
-import org.usfirst.frc.team1432.robot.subsystems.*;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Talon;
@@ -22,14 +21,18 @@ import edu.wpi.first.wpilibj.CameraServer;
  * directory.
  */
 public class Robot extends IterativeRobot {
-	Encoder armEncoder;
+	Encoder lowerArmEncoder;
+	Encoder upperArmEncoder;
 	CameraServer server;
 	RobotDrive drive;
-	public static final arm Arm = new arm();
 	public static OI oi;
     Command autonomousCommand;
     SendableChooser chooser;
-
+    Talon driveLeft;
+    Talon driveRight;
+    Talon lowerJoint;
+    Talon upperJoint;
+    Arm arm;
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
@@ -37,7 +40,6 @@ public class Robot extends IterativeRobot {
     public void robotInit() {    	
     	oi = new OI();
 		setupdrive();
-		SmartDashboard.putString("message", "");
         chooser = new SendableChooser();
         //chooser.addDefault("Default Auto", new arm());
         //chooser.addObject("My Auto", new MyAutoCommand());
@@ -46,9 +48,13 @@ public class Robot extends IterativeRobot {
         server.setQuality(100);
         //the camera name (ex "cam0") can be found through the roborio web interface
         server.startAutomaticCapture("cam0");
-    	armEncoder = new Encoder(0, Arm.lowerarm);
-    	armEncoder.start();
-    	//armEncoder.stoprun();
+    	lowerArmEncoder = new Encoder(0, driveLeft);
+    	upperArmEncoder = new Encoder(1, driveRight);
+    	lowerArmEncoder.start();
+    	upperArmEncoder.start();
+    	lowerJoint = new Talon(RobotMap.lowerJointMotor);
+    	upperJoint = new Talon(RobotMap.upperJointMotor);
+    	arm = new Arm(lowerJoint, upperJoint, lowerArmEncoder, upperArmEncoder);
     }
 	
 	/**
@@ -98,8 +104,10 @@ public class Robot extends IterativeRobot {
 
     public void teleopInit() {
     	print("Started Teleop");
-    	armEncoder.reset();
-    	Arm.lowerarm.set(-.05);
+    	upperArmEncoder.reset();
+    	lowerArmEncoder.reset();
+    	print(arm.getDistance());
+    	//Arm.lowerarm.set(-.05);
     	// This makes sure that the autonomous stops running when
         // teleop starts running. If you want the autonomous to 
         // continue until interrupted by another command, remove
@@ -111,43 +119,47 @@ public class Robot extends IterativeRobot {
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
-    	print(armEncoder.getRotations()+"Rotations");
-    	print(armEncoder.getCM() + "CM");
-    	print(armEncoder.getDegrees()+"Degrees");
-    	print(armEncoder.getInches()+"IN");
     	drive();
         Scheduler.getInstance().run();
+        LiveWindow.run();
+		SmartDashboard.putNumber("Lower Arm", lowerArmEncoder.getDegrees());
+		SmartDashboard.putNumber("Upper Arm", upperArmEncoder.getDegrees());
     }
     
+    public double round(double value){
+		return Math.round((value) * 100d) / 100d;
+	}
+	public double roundlong(double value){
+		return Math.round((value) * 10000d) / 10000d;
+	}
+    
     public void setupdrive() {
-    	Talon driveleft = new Talon (RobotMap.leftwheels);
-		Talon driveright = new Talon (RobotMap.rightwheels);
-		drive = new RobotDrive(driveleft, driveright);
+    	driveLeft = new Talon (RobotMap.leftWheels);
+		driveRight = new Talon (RobotMap.rightWheels);
+		drive = new RobotDrive(driveLeft, driveRight);
     }
     
     public void drive() {
     	drive.arcadeDrive(oi.controller, true);
     }
     
-    public void print(String string) {
+	public void print(String string) {
     	System.out.println(string);
     }
     
     public void print(double Double){
-    	System.out.println(Double);
+    	System.out.println(round(Double));
     }
     
     public void print(int Int) {
-    	System.out.println(Int);
+    	System.out.println(round(Int));
     }
+
     /**
      * This function is called periodically during test mode
      */
 
 	public void testPeriodic() {
-		print(armEncoder.getValue());
-		//armEncoder.run();
         LiveWindow.run();
-        //print(armEncoder.getvalue());
     }
 }

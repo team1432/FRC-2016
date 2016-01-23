@@ -3,6 +3,7 @@
  */
 package org.usfirst.frc.team1432.robot;
 import edu.wpi.first.wpilibj.*;
+
 import java.util.concurrent.locks.*;
 
 /**
@@ -52,24 +53,27 @@ public class Encoder extends Thread {
 	public double round(double value){
 		return Math.round((value) * 100d) / 100d;
 	}
+	public double roundlong(double value){
+		return Math.round((value) * 10000d) / 10000d;
+	}
 	
 	public void print(String string) {
     	System.out.println(string);
     }
     
     public void print(double Double){
-    	System.out.println(Double);
+    	System.out.println(round(Double));
     }
     
     public void print(int Int) {
-    	System.out.println(Int);
+    	System.out.println(round(Int));
     }
     
     public double getRotations(){
     	return round(rotations + current);
     }
 	public double getDegrees(){
-		return round((current+rotations)*degreesPerRotation);
+		return round((current)*degreesPerRotation);
 	}
 	public double getCM(){
 		return round((current+rotations)*centemetersPerRotation);
@@ -85,7 +89,7 @@ public class Encoder extends Thread {
 			if (sensorMotor != null){
 				previous = current;
 				lock.lock();
-				current = round(input.getVoltage()/5);
+				current = roundlong(input.getVoltage()/5);
 				lock.unlock();
 				if (sensorMotor.get() < 0 &&  current - previous < -0.5) {
 					rotations ++;
