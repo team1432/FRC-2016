@@ -4,13 +4,14 @@ package org.usfirst.frc.team1432.robot;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Talon;
+import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.CameraServer;
-
+import org.usfirst.frc.team1432.robot.Encoder;
 
 
 /**
@@ -21,8 +22,6 @@ import edu.wpi.first.wpilibj.CameraServer;
  * directory.
  */
 public class Robot extends IterativeRobot {
-	Encoder lowerArmEncoder;
-	Encoder upperArmEncoder;
 	CameraServer server;
 	RobotDrive drive;
 	public static OI oi;
@@ -30,17 +29,22 @@ public class Robot extends IterativeRobot {
     SendableChooser chooser;
     Talon driveLeft;
     Talon driveRight;
-    Talon lowerJoint;
-    Talon upperJoint;
-    Arm arm;
+    CANTalon lowerJoint;
+    CANTalon upperJoint = new CANTalon(2);
+    CANTalon testMotor;
+    //Arm arm;
+    Encoder testEncoder;
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
     public void robotInit() {    	
     	oi = new OI();
-		setupdrive();
+	//	setupdrive();
         chooser = new SendableChooser();
+    	testEncoder = new Encoder(0, upperJoint);
+    	upperJoint.set(0.1);
+    	testEncoder.start();
         //chooser.addDefault("Default Auto", new arm());
         //chooser.addObject("My Auto", new MyAutoCommand());
         SmartDashboard.putData("Auto mode", chooser);
@@ -48,13 +52,13 @@ public class Robot extends IterativeRobot {
         server.setQuality(100);
         //the camera name (ex "cam0") can be found through the roborio web interface
         server.startAutomaticCapture("cam0");
-    	lowerArmEncoder = new Encoder(0, driveLeft);
-    	upperArmEncoder = new Encoder(1, driveRight);
-    	lowerArmEncoder.start();
-    	upperArmEncoder.start();
-    	lowerJoint = new Talon(RobotMap.lowerJointMotor);
-    	upperJoint = new Talon(RobotMap.upperJointMotor);
-    	arm = new Arm(lowerJoint, upperJoint, lowerArmEncoder, upperArmEncoder);
+/*    	testMotor = new CANTalon(2);
+    	testMotor.changeControlMode(TalonControlMode.Position); //Change control mode of talon, default is PercentVbus (-1.0 to 1.0)
+    	testMotor.setFeedbackDevice(FeedbackDevice.AnalogEncoder); //Set the feedback device that is hooked up to the talon
+    	testMotor.reverseOutput(true);
+    	testMotor.enableControl(); //Enable PID control on the talon
+    	testMotor.setPosition(2453);
+*/    	//arm = new Arm();
     }
 	
 	/**
@@ -104,9 +108,9 @@ public class Robot extends IterativeRobot {
 
     public void teleopInit() {
     	print("Started Teleop");
-    	upperArmEncoder.reset();
-    	lowerArmEncoder.reset();
-    	print(arm.getDistance());
+    	//arm.setPosition(50);
+    	//print(arm.upperEncoder.getRotations());
+    	//print(arm.getDistance());
     	//Arm.lowerarm.set(-.05);
     	// This makes sure that the autonomous stops running when
         // teleop starts running. If you want the autonomous to 
@@ -119,17 +123,22 @@ public class Robot extends IterativeRobot {
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
-    	drive();
+    	//drive();
+    	/*
+    	print("degrees:");
+    	print(testEncoder.getDegrees());
+    	print("inches:");
+    	print(testEncoder.getInches());
+    	print("rotations:");*/
+    	print(testEncoder.getRotations());
         Scheduler.getInstance().run();
         LiveWindow.run();
-		SmartDashboard.putNumber("Lower Arm", lowerArmEncoder.getDegrees());
-		SmartDashboard.putNumber("Upper Arm", upperArmEncoder.getDegrees());
     }
     
-    public double round(double value){
+    public double round(double value) {
 		return Math.round((value) * 100d) / 100d;
 	}
-	public double roundlong(double value){
+	public double roundlong(double value) {
 		return Math.round((value) * 10000d) / 10000d;
 	}
     
@@ -140,7 +149,9 @@ public class Robot extends IterativeRobot {
     }
     
     public void drive() {
+    	print("about to drive");
     	drive.arcadeDrive(oi.controller, true);
+    	print("driven");
     }
     
 	public void print(String string) {

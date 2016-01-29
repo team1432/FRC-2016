@@ -16,15 +16,17 @@ public class Encoder extends Thread {
 	double previous;
 	double rotations;
 	double currentAngle;
+	private double[] numbers;
 	public static double degreesPerRotation = 360;
 	public static double inchesPerRotation = 0.8853826956614173;
 	public static double centemetersPerRotation = 2.24887204698;
-	Talon sensorMotor;
+	CANTalon sensorMotor;
 	private ReentrantLock lock;
 	private Thread thread; 
 	private Boolean cont;
 	
-	public Encoder(int port, Talon motor) {
+	
+	public Encoder(int port, CANTalon motor) {
 		cont = false;
 		input = new AnalogInput(port);
 		current = 0;
@@ -32,18 +34,9 @@ public class Encoder extends Thread {
 		rotations = 0;
 		sensorMotor = motor;
 		lock = new ReentrantLock();
+		numbers = new double[10];
 	}
-	
-	/*
-	 * Gets double value from input 
-	 */
-	public double getValue(){
-		lock.lock();
-		double value = round(input.getVoltage()/5);
-		lock.unlock();
-		return value;
-	}
-	
+		
 	public void reset(){
 		rotations = 0;
 		current = 0;
@@ -69,17 +62,39 @@ public class Encoder extends Thread {
     	System.out.println(round(Int));
     }
     
+	/*
+	 * Gets double value from input 
+	 */
+	public double getValue(){
+		lock.lock();
+		double value = round(input.getVoltage()/5);
+		lock.unlock();
+		return value;
+	}
+    
     public double getRotations(){
-    	return round(rotations + current);
+    	lock.lock();
+    	double value =  round(rotations + current);
+    	lock.unlock();
+    	return value;
     }
 	public double getDegrees(){
-		return round((current)*degreesPerRotation);
+		lock.lock();
+		double value = round((current)*degreesPerRotation);
+		lock.unlock();
+		return value;
 	}
 	public double getCM(){
-		return round((current+rotations)*centemetersPerRotation);
+		lock.lock();
+		double value = round((current+rotations)*centemetersPerRotation);
+		lock.unlock();
+		return value;
 	}
 	public double getInches(){
-		return round((current+rotations)*inchesPerRotation);
+		lock.lock();
+		double value = round((current+rotations)*inchesPerRotation);
+		lock.unlock();
+		return value;
 	}
     
 	@Override
@@ -87,9 +102,13 @@ public class Encoder extends Thread {
 		Boolean running = cont;
 		while(running) {
 			if (sensorMotor != null){
-				previous = current;
 				lock.lock();
-				current = roundlong(input.getVoltage()/5);
+				previous = current;
+				for (int x = 9; x > 0; x--){
+					numbers[x]= numbers[x-1];
+				}
+				numbers[0] = roundlong(input.getVoltage()/5);
+				current = (numbers[0] + numbers[1] + numbers[2] + numbers[3] + numbers[4] + numbers[5] + numbers[6] + numbers[7] + numbers[8] + numbers[9])/10;
 				lock.unlock();
 				if (sensorMotor.get() < 0 &&  current - previous < -0.5) {
 					rotations ++;
