@@ -5,8 +5,6 @@ package org.usfirst.frc.team1432.robot;
 
 import org.usfirst.frc.team1432.robot.*;
 import edu.wpi.first.wpilibj.*;
-import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
-
 import org.usfirst.frc.team1432.robot.Encoder;
 
 /**
@@ -14,7 +12,7 @@ import org.usfirst.frc.team1432.robot.Encoder;
  *
  */
 public class Arm {
-    CANTalon lowerArm = new CANTalon (RobotMap.lowerArmMotor);
+/*    CANTalon lowerArm = new CANTalon (RobotMap.lowerArmMotor);
     CANTalon upperArm = new CANTalon (RobotMap.upperArmMotor);
     Encoder lowerEncoder;
     Encoder upperEncoder;
@@ -23,12 +21,8 @@ public class Arm {
     double upperLength = 2;
     
     public Arm() {
-//    	lowerEncoder = new Encoder(RobotMap.lowerArmEncoder, lowerArm);
-//    	upperEncoder = new Encoder(RobotMap.upperArmEncoder, upperArm);
-//    	lowerEncoder.start();
-//    	upperEncoder.start();
-    	lowerArm.setFeedbackDevice(FeedbackDevice.AnalogEncoder);
-    	upperArm.setFeedbackDevice(FeedbackDevice.AnalogEncoder);
+    	lowerEncoder = new Encoder(RobotMap.lowerArmEncoder, lowerArm);
+    	upperEncoder = new Encoder(RobotMap.upperArmEncoder, upperArm);
     }
     
 	public double round(double value){
@@ -62,33 +56,29 @@ public class Arm {
     }
     
     public void setPosition(double position){
-    	System.out.println("upper:");
-    	System.out.println(upperArm.getEncPosition());
-    	System.out.println("lower:");
-    	System.out.println(lowerArm.getEncPosition());
     	while (true) {
-    		if (upperArm.getEncPosition()> position){
+    		if (upperEncoder.getValue()> position){
     			System.out.println("positive");
     			set(.3);
     		}
-    		if (upperArm.getEncPosition()< position){
+    		if (upperEncoder.getValue()< position){
     			System.out.println("negative");
     			set(-.3);
     		}
 			SafeDistance();
 			System.out.println("upper:");
-	    	System.out.println(upperArm.getEncPosition());
+	    	System.out.println(upperEncoder.getValue());
 	    	System.out.println("lower:");
-	    	System.out.println(lowerArm.getEncPosition());
+	    	System.out.println(lowerEncoder.getValue());
     	}
     	
     }
     
     public double getDistance(){
-    	return round(lowerLength*Math.cos(lowerArm.getEncPosition()))+(upperLength*Math.cos(180-(lowerArm.getEncPosition()+upperArm.getEncPosition())));
+    	return round(lowerLength*Math.cos(lowerEncoder.getValue()))+(upperLength*Math.cos(180-(lowerEncoder.getValue()+upperEncoder.getValue())));
     }
     public void SafeDistance() {
-		D = (lowerLength*Math.cos(lowerArm.getEncPosition()))+(upperLength*Math.cos(180-(lowerArm.getEncPosition()+upperArm.getEncPosition())));
+		D = (lowerLength*Math.cos(lowerEncoder.getValue()))+(upperLength*Math.cos(180-(lowerEncoder.getValue()+upperEncoder.getValue())));
 		while (D > 14){
 			lowerArm.set(-.1);
 		}
@@ -96,5 +86,5 @@ public class Arm {
 			lowerArm.set(.1);
 		}
 		lowerArm.set(0);    	
-	}
+	}*/
 }

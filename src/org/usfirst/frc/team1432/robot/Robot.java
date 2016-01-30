@@ -43,7 +43,7 @@ public class Robot extends IterativeRobot {
 	//	setupdrive();
         chooser = new SendableChooser();
     	testEncoder = new Encoder(0, upperJoint);
-    	upperJoint.set(0.1);
+    	//upperJoint.set(.5);
     	testEncoder.start();
         //chooser.addDefault("Default Auto", new arm());
         //chooser.addObject("My Auto", new MyAutoCommand());
@@ -51,7 +51,7 @@ public class Robot extends IterativeRobot {
         server = CameraServer.getInstance();
         server.setQuality(100);
         //the camera name (ex "cam0") can be found through the roborio web interface
-        server.startAutomaticCapture("cam0");
+        server.startAutomaticCapture("cam1");
 /*    	testMotor = new CANTalon(2);
     	testMotor.changeControlMode(TalonControlMode.Position); //Change control mode of talon, default is PercentVbus (-1.0 to 1.0)
     	testMotor.setFeedbackDevice(FeedbackDevice.AnalogEncoder); //Set the feedback device that is hooked up to the talon
@@ -108,6 +108,7 @@ public class Robot extends IterativeRobot {
 
     public void teleopInit() {
     	print("Started Teleop");
+    	testEncoder.reset();
     	//arm.setPosition(50);
     	//print(arm.upperEncoder.getRotations());
     	//print(arm.getDistance());
@@ -130,8 +131,9 @@ public class Robot extends IterativeRobot {
     	print("inches:");
     	print(testEncoder.getInches());
     	print("rotations:");*/
-    	print(testEncoder.getRotations());
-        Scheduler.getInstance().run();
+    	System.out.println(testEncoder.getRotations());
+        upperJoint.set(oi.controller.getRawAxis(1));
+    	Scheduler.getInstance().run();
         LiveWindow.run();
     }
     

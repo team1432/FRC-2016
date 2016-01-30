@@ -13,10 +13,11 @@ import java.util.concurrent.locks.*;
 public class Encoder extends Thread {
 	AnalogInput input;
 	double current;
-	double previous;
+	double ago1;
+	double ago2;
+	double ago3;
 	double rotations;
 	double currentAngle;
-	private double[] numbers;
 	public static double degreesPerRotation = 360;
 	public static double inchesPerRotation = 0.8853826956614173;
 	public static double centemetersPerRotation = 2.24887204698;
@@ -30,17 +31,18 @@ public class Encoder extends Thread {
 		cont = false;
 		input = new AnalogInput(port);
 		current = 0;
-		previous = 0;
+		ago1 = 0;
 		rotations = 0;
 		sensorMotor = motor;
 		lock = new ReentrantLock();
-		numbers = new double[10];
 	}
 		
 	public void reset(){
 		rotations = 0;
 		current = 0;
-		previous = 0;
+		ago1 = 0;
+		ago2 = 0;
+		ago3 = 0;
 	}
 	
 	public double round(double value){
@@ -67,14 +69,14 @@ public class Encoder extends Thread {
 	 */
 	public double getValue(){
 		lock.lock();
-		double value = round(input.getVoltage()/5);
+		double value = current;
 		lock.unlock();
 		return value;
 	}
     
     public double getRotations(){
     	lock.lock();
-    	double value =  round(rotations + current);
+    	double value =  /*round*/(rotations + current);
     	lock.unlock();
     	return value;
     }
@@ -103,18 +105,22 @@ public class Encoder extends Thread {
 		while(running) {
 			if (sensorMotor != null){
 				lock.lock();
-				previous = current;
-				for (int x = 9; x > 0; x--){
-					numbers[x]= numbers[x-1];
-				}
-				numbers[0] = roundlong(input.getVoltage()/5);
-				current = (numbers[0] + numbers[1] + numbers[2] + numbers[3] + numbers[4] + numbers[5] + numbers[6] + numbers[7] + numbers[8] + numbers[9])/10;
+				ago3 = ago2;
+				ago2 = ago1;
+				ago1 = current;
+				current = (input.getAverageVoltage()/5);
 				lock.unlock();
-				if (sensorMotor.get() < 0 &&  current - previous < -0.5) {
-					rotations ++;
+				//clockwise
+				if (ago2 - ago3 > 0) {
+					if (current - ago1 < -.5) {
+						rotations++;
+					}
 				}
-				else if (sensorMotor.get() > 0 && current - previous > 0.5){
-					rotations --;
+				//counterclockwise
+				else if (ago2 - ago3 < 0){
+					if (current - ago1 > .5) {
+						rotations--;
+					}
 				}
 			}
 			lock.lock();
