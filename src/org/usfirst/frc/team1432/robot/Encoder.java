@@ -14,35 +14,32 @@ public class Encoder extends Thread {
 	AnalogInput input;
 	double current;
 	double ago1;
-	double ago2;
-	double ago3;
 	double rotations;
-	double currentAngle;
+	double resetValue;
 	public static double degreesPerRotation = 360;
 	public static double inchesPerRotation = 0.8853826956614173;
 	public static double centemetersPerRotation = 2.24887204698;
-	CANTalon sensorMotor;
 	private ReentrantLock lock;
 	private Thread thread; 
 	private Boolean cont;
 	
 	
-	public Encoder(int port, CANTalon motor) {
+	public Encoder(int port) {
 		cont = false;
 		input = new AnalogInput(port);
 		current = 0;
 		ago1 = 0;
 		rotations = 0;
-		sensorMotor = motor;
 		lock = new ReentrantLock();
 	}
 		
 	public void reset(){
+		lock.lock();
+		resetValue = input.getAverageVoltage()/5;
 		rotations = 0;
 		current = 0;
 		ago1 = 0;
-		ago2 = 0;
-		ago3 = 0;
+		lock.unlock();
 	}
 	
 	public double round(double value){
@@ -103,27 +100,16 @@ public class Encoder extends Thread {
 	public void run() {
 		Boolean running = cont;
 		while(running) {
-			if (sensorMotor != null){
-				lock.lock();
-				ago3 = ago2;
-				ago2 = ago1;
-				ago1 = current;
-				current = (input.getAverageVoltage()/5);
-				lock.unlock();
-				//clockwise
-				if (ago2 - ago3 > 0) {
-					if (current - ago1 < -.5) {
-						rotations++;
-					}
-				}
-				//counterclockwise
-				else if (ago2 - ago3 < 0){
-					if (current - ago1 > .5) {
-						rotations--;
-					}
-				}
-			}
 			lock.lock();
+			ago1 = current;
+			current = (input.getAverageVoltage()/5-resetValue);
+			//clockwise
+			if (current - ago1 < -.5) {
+				rotations++;
+			}
+			if (current - ago1 > .5) {
+				rotations--;
+			}
 			running = cont;
 			lock.unlock();
 		}

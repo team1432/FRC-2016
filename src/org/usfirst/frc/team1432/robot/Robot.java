@@ -2,8 +2,11 @@
 package org.usfirst.frc.team1432.robot;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Joystick.RumbleType;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Talon;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
@@ -29,22 +32,17 @@ public class Robot extends IterativeRobot {
     SendableChooser chooser;
     Talon driveLeft;
     Talon driveRight;
-    CANTalon lowerJoint;
-    CANTalon upperJoint = new CANTalon(2);
-    CANTalon testMotor;
+    Encoder test;
+    CANTalon talon = new CANTalon(2);
     //Arm arm;
-    Encoder testEncoder;
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
     public void robotInit() {    	
     	oi = new OI();
-	//	setupdrive();
+		//setupdrive();
         chooser = new SendableChooser();
-    	testEncoder = new Encoder(0, upperJoint);
-    	//upperJoint.set(.5);
-    	testEncoder.start();
         //chooser.addDefault("Default Auto", new arm());
         //chooser.addObject("My Auto", new MyAutoCommand());
         SmartDashboard.putData("Auto mode", chooser);
@@ -52,13 +50,9 @@ public class Robot extends IterativeRobot {
         server.setQuality(100);
         //the camera name (ex "cam0") can be found through the roborio web interface
         server.startAutomaticCapture("cam1");
-/*    	testMotor = new CANTalon(2);
-    	testMotor.changeControlMode(TalonControlMode.Position); //Change control mode of talon, default is PercentVbus (-1.0 to 1.0)
-    	testMotor.setFeedbackDevice(FeedbackDevice.AnalogEncoder); //Set the feedback device that is hooked up to the talon
-    	testMotor.reverseOutput(true);
-    	testMotor.enableControl(); //Enable PID control on the talon
-    	testMotor.setPosition(2453);
-*/    	//arm = new Arm();
+    	//arm = new Arm();
+    	test = new Encoder(3);
+    	test.start();
     }
 	
 	/**
@@ -108,11 +102,12 @@ public class Robot extends IterativeRobot {
 
     public void teleopInit() {
     	print("Started Teleop");
-    	testEncoder.reset();
-    	//arm.setPosition(50);
-    	//print(arm.upperEncoder.getRotations());
-    	//print(arm.getDistance());
-    	//Arm.lowerarm.set(-.05);
+    	test.reset();
+    	oi.controller.setRumble(RumbleType.kLeftRumble, 1);
+    	oi.controller.setRumble(RumbleType.kRightRumble, 1);
+    	Timer.delay(0.15);
+    	oi.controller.setRumble(RumbleType.kLeftRumble, 0);
+    	oi.controller.setRumble(RumbleType.kRightRumble, 0);
     	// This makes sure that the autonomous stops running when
         // teleop starts running. If you want the autonomous to 
         // continue until interrupted by another command, remove
@@ -124,16 +119,10 @@ public class Robot extends IterativeRobot {
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
+    	talon.set(oi.controller.getRawAxis(1));
+    	print(test.getRotations());
     	//drive();
-    	/*
-    	print("degrees:");
-    	print(testEncoder.getDegrees());
-    	print("inches:");
-    	print(testEncoder.getInches());
-    	print("rotations:");*/
-    	System.out.println(testEncoder.getRotations());
-        upperJoint.set(oi.controller.getRawAxis(1));
-    	Scheduler.getInstance().run();
+    	//Scheduler.getInstance().run();
         LiveWindow.run();
     }
     
@@ -167,7 +156,11 @@ public class Robot extends IterativeRobot {
     public void print(int Int) {
     	System.out.println(round(Int));
     }
-
+    
+    public void testInit() {
+    	
+    }
+    
     /**
      * This function is called periodically during test mode
      */
