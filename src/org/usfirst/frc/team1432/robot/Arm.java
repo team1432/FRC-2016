@@ -3,16 +3,17 @@
  */
 package org.usfirst.frc.team1432.robot;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.usfirst.frc.team1432.robot.*;
 import edu.wpi.first.wpilibj.*;
 import org.usfirst.frc.team1432.robot.Encoder;
 import edu.wpi.first.wpilibj.DigitalInput;
-
 /**
  * @author team 1432
  *
  */
-public class Arm {
+public class Arm extends Thread {
     CANTalon lowerArm;
     CANTalon upperArm;
     Encoder lowerEncoder;
@@ -26,7 +27,11 @@ public class Arm {
     double upperMultiplier = 112.5;
     DigitalInput lowerArmResetButton;
     DigitalInput upperArmResetButton;
-    
+	private Thread thread; 
+	private Boolean cont;
+	private ReentrantLock lock;
+	private double goal;
+	
     public Arm() {
     	lowerEncoder = new Encoder(RobotMap.lowerArmEncoder);
     	upperEncoder = new Encoder(RobotMap.upperArmEncoder);
@@ -36,12 +41,39 @@ public class Arm {
     	upperArmResetButton = new DigitalInput(RobotMap.upperArmButton);
     	lowerEncoder.start();
     	upperEncoder.start();
+    	lock = new ReentrantLock();
+    	goal = getUpperDegrees();
+    	lowerEncoder.reset();
+    	upperEncoder.reset();
     }
     
-	public double round(double value){
+	@Override
+	public void run() {
+		Boolean running = cont;
+		//keep position
+		while(running) {
+			upperArm.set(-(goal - getUpperDegrees())/30);
+			SafeDistance();
+		}
+	}
+	
+	public void start() {
+		if(thread == null) {
+			cont=true;
+			thread = new Thread(this);
+			thread.start();
+		}
+	}
+	public void stoprun() {
+		lock.lock();
+		cont = false;
+		lock.unlock();
+	}
+
+    public double round(double value){
 		return Math.round((value) * 100d) / 100d;
 	}
-	public double roundlongs(double value){
+	public double roundlong(double value){
 		return Math.round((value) * 10000d) / 10000d;
 	}
 	
@@ -67,26 +99,23 @@ public class Arm {
     	upperArm.set(speed);
     	SafeDistance();
     }
-    private double getLowerAngle() {
+    public double getLowerDegrees(){
+    	return lowerEncoder.getRotations()*lowerMultiplier;
+    }
+
+    public double getUpperDegrees(){
+    	return upperEncoder.getRotations()*upperMultiplier;
+    }
+    
+    public double getLowerAngle() {
 		return Math.toRadians(lowerEncoder.getRotations()*lowerMultiplier);
     }
-    private double getUpperAngle() {
+    public double getUpperAngle() {
     	return Math.toRadians(upperEncoder.getRotations()*upperMultiplier);
     }
     public void setPosition(double position){
-    	while (true) {
-    		if (getUpperAngle()> position){
-    			System.out.println("positive");
-    			set(.3);
-    		}
-    		if (getUpperAngle()< position){
-    			System.out.println("negative");
-    			set(-.3);
-    		}
-			SafeDistance();
-    	}
-    	
-    }
+    	goal = position;
+	}
     public void reset() {
     	while(!lowerArmResetButton.get()) {
     		lowerArm.set(-1);
@@ -108,10 +137,10 @@ public class Arm {
     }
     public void SafeDistance() {
 		distance = (lowerLength*Math.cos(getLowerAngle()))+(upperLength*Math.cos(180-(getLowerAngle()+getUpperAngle())));
-		while (distance > 14){
+		if (distance > 14){
 			lowerArm.set(-.1);
 		}
-		while (distance < 13) {
+		if (distance < 13) {
 			lowerArm.set(.1);
 		}
 		lowerArm.set(0);    	

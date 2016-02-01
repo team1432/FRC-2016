@@ -32,16 +32,16 @@ public class Robot extends IterativeRobot {
     SendableChooser chooser;
     Talon driveLeft;
     Talon driveRight;
-    Encoder test;
     CANTalon talon = new CANTalon(2);
-    //Arm arm;
+    Arm arm;
+    double goal;
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
     public void robotInit() {    	
     	oi = new OI();
-		//setupdrive();
+		setupdrive();
         chooser = new SendableChooser();
         //chooser.addDefault("Default Auto", new arm());
         //chooser.addObject("My Auto", new MyAutoCommand());
@@ -50,9 +50,8 @@ public class Robot extends IterativeRobot {
         server.setQuality(100);
         //the camera name (ex "cam0") can be found through the roborio web interface
         server.startAutomaticCapture("cam1");
-    	//arm = new Arm();
-    	test = new Encoder(3);
-    	test.start();
+    	arm = new Arm();
+    	arm.start();
     }
 	
 	/**
@@ -75,9 +74,9 @@ public class Robot extends IterativeRobot {
 	 * You can add additional auto modes by adding additional commands to the chooser code above (like the commented example)
 	 * or additional comparisons to the switch structure below with additional strings & commands.
 	 */
-    public void autonomousInit() {
-        autonomousCommand = (Command) chooser.getSelected();
-        
+	public void autonomousInit() {
+		autonomousCommand = (Command) chooser.getSelected();
+		
 		/* String autoSelected = SmartDashboard.getString("Auto Selector", "Default");
 		switch(autoSelected) {
 		case "My Auto":
@@ -102,28 +101,54 @@ public class Robot extends IterativeRobot {
 
     public void teleopInit() {
     	print("Started Teleop");
-    	test.reset();
+    	drive();
     	oi.controller.setRumble(RumbleType.kLeftRumble, 1);
     	oi.controller.setRumble(RumbleType.kRightRumble, 1);
-    	Timer.delay(0.15);
+    	Timer.delay(0.05);
+    	drive();
+    	Timer.delay(0.05);
+    	drive();
+    	Timer.delay(0.05);
+    	drive();
     	oi.controller.setRumble(RumbleType.kLeftRumble, 0);
     	oi.controller.setRumble(RumbleType.kRightRumble, 0);
+    	while(isEnabled() && isOperatorControl()){
+    		print(arm.getUpperDegrees());
+    		print("Goal:");
+    		print(goal);
+    		drive();
+    		if(oi.controller.getRawButton(1)) {
+    			while(oi.controller.getRawButton(1)) {
+    				drive();
+    				goal -=1;
+    				Timer.delay(.005);
+    				arm.setPosition(goal);
+    			}
+    		}
+    		if(oi.controller.getRawButton(4)) {
+    			while(oi.controller.getRawButton(4)) {
+    				drive();
+    				goal +=1;
+    				Timer.delay(.005);
+    				arm.setPosition(goal);
+    			}
+    		}
+    		arm.setPosition(goal);
+    		//Scheduler.getInstance().run();
+    		//LiveWindow.run();
+		}
+
     	// This makes sure that the autonomous stops running when
         // teleop starts running. If you want the autonomous to 
         // continue until interrupted by another command, remove
         // this line or comment it out.
         //if (autonomousCommand != null) autonomousCommand.cancel();
     }
-
     /**
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
-    	talon.set(oi.controller.getRawAxis(1));
-    	print(test.getRotations());
-    	//drive();
-    	//Scheduler.getInstance().run();
-        LiveWindow.run();
+    	
     }
     
     public double round(double value) {
@@ -140,9 +165,7 @@ public class Robot extends IterativeRobot {
     }
     
     public void drive() {
-    	print("about to drive");
     	drive.arcadeDrive(oi.controller, true);
-    	print("driven");
     }
     
 	public void print(String string) {

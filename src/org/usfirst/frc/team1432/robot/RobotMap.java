@@ -14,8 +14,8 @@ public class RobotMap {
     public static int rightWheels = 1;
     
     ////////////// CAN Bus //////////////
-    public static int lowerArmMotor = 2;
-    public static int upperArmMotor = 3;
+    public static int lowerArmMotor = 1;
+    public static int upperArmMotor = 2;
     
     ///////////// Analog IN /////////////
     public static int lowerArmEncoder = 0;
