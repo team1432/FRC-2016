@@ -25,10 +25,12 @@ import org.usfirst.frc.team1432.robot.Encoder;
  * directory.
  */
 public class Robot extends IterativeRobot {
+	Encoder leftDriveEncoder;
+	Encoder rightDriveEncoder;
 	CameraServer server;
 	RobotDrive drive;
 	public static OI oi;
-    Command autonomousCommand;
+    String autonomousCommand;
     SendableChooser chooser;
     Talon driveLeft;
     Talon driveRight;
@@ -43,8 +45,9 @@ public class Robot extends IterativeRobot {
     	oi = new OI();
 		setupdrive();
         chooser = new SendableChooser();
-        //chooser.addDefault("Default Auto", new arm());
-        //chooser.addObject("My Auto", new MyAutoCommand());
+        chooser.addDefault("No Drive", "No Drive");
+        chooser.addObject("Drive", "Drive");
+        chooser.addObject("Short Drive", "Short Drive");
         SmartDashboard.putData("Auto mode", chooser);
         server = CameraServer.getInstance();
         server.setQuality(100);
@@ -52,6 +55,8 @@ public class Robot extends IterativeRobot {
         server.startAutomaticCapture("cam1");
     	arm = new Arm();
     	arm.start();
+    	leftDriveEncoder = new Encoder(RobotMap.leftWheelEncoder);
+    	rightDriveEncoder = new Encoder(RobotMap.rightWheelEncoder);
     }
 	
 	/**
@@ -60,6 +65,7 @@ public class Robot extends IterativeRobot {
 	 * the robot is disabled.
      */
     public void disabledInit(){
+    	arm.reset();
     }
 	
 	public void disabledPeriodic() {
@@ -75,21 +81,26 @@ public class Robot extends IterativeRobot {
 	 * or additional comparisons to the switch structure below with additional strings & commands.
 	 */
 	public void autonomousInit() {
-		autonomousCommand = (Command) chooser.getSelected();
-		
-		/* String autoSelected = SmartDashboard.getString("Auto Selector", "Default");
-		switch(autoSelected) {
-		case "My Auto":
-			autonomousCommand = new MyAutoCommand();
+		autonomousCommand = (String) chooser.getSelected();
+		print(autonomousCommand);
+		switch(autonomousCommand) {
+		case "Drive":
+			while(isAutonomous() && isEnabled()) {
+				drive.arcadeDrive(1, (leftDriveEncoder.getRotations() - rightDriveEncoder.getRotations())/2);
+			}
 			break;
-		case "Default Auto":
+		case "Short Drive":
+			while(isAutonomous() && isEnabled()) {
+				drive.arcadeDrive(0.5, 0);
+			}
+			break;
+		case "No Drive":
 		default:
-			autonomousCommand = new ExampleCommand();
+			while(isAutonomous() && isEnabled()) {
+				drive.arcadeDrive(0, 0);
+			}
 			break;
-		} */
-    	
-    	// schedule the autonomous command ()
-        if (autonomousCommand != null) autonomousCommand.start();
+		}
     }
 
     /**
@@ -114,14 +125,12 @@ public class Robot extends IterativeRobot {
     	oi.controller.setRumble(RumbleType.kRightRumble, 0);
     	while(isEnabled() && isOperatorControl()){
     		print(arm.getUpperDegrees());
-    		print("Goal:");
-    		print(goal);
     		drive();
     		if(oi.controller.getRawButton(1)) {
     			while(oi.controller.getRawButton(1)) {
     				drive();
     				goal -=1;
-    				Timer.delay(.005);
+    				Timer.delay(.02);
     				arm.setPosition(goal);
     			}
     		}
@@ -129,7 +138,7 @@ public class Robot extends IterativeRobot {
     			while(oi.controller.getRawButton(4)) {
     				drive();
     				goal +=1;
-    				Timer.delay(.005);
+    				Timer.delay(.02);
     				arm.setPosition(goal);
     			}
     		}

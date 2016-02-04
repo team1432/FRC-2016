@@ -42,9 +42,7 @@ public class Arm extends Thread {
     	lowerEncoder.start();
     	upperEncoder.start();
     	lock = new ReentrantLock();
-    	goal = getUpperDegrees();
-    	lowerEncoder.reset();
-    	upperEncoder.reset();
+    	reset();
     }
     
 	@Override
@@ -52,16 +50,20 @@ public class Arm extends Thread {
 		Boolean running = cont;
 		//keep position
 		while(running) {
-			upperArm.set(-(goal - getUpperDegrees())/30);
+			lock.lock();
+			upperArm.set(-(goal - getUpperDegrees())/100);
 			SafeDistance();
+			lock.unlock();
 		}
 	}
 	
 	public void start() {
 		if(thread == null) {
+			lock.lock();
 			cont=true;
 			thread = new Thread(this);
 			thread.start();
+			lock.unlock();
 		}
 	}
 	public void stoprun() {
@@ -100,11 +102,11 @@ public class Arm extends Thread {
     	SafeDistance();
     }
     public double getLowerDegrees(){
-    	return lowerEncoder.getRotations()*lowerMultiplier;
+    	return lowerEncoder.getRotations()/**lowerMultiplier*/;
     }
 
     public double getUpperDegrees(){
-    	return upperEncoder.getRotations()*upperMultiplier;
+    	return upperEncoder.getRotations()/**upperMultiplier*/;
     }
     
     public double getLowerAngle() {
@@ -117,6 +119,10 @@ public class Arm extends Thread {
     	goal = position;
 	}
     public void reset() {
+    	upperEncoder.reset();
+    	lowerEncoder.reset();
+    	goal = getUpperDegrees();
+    	/*
     	while(!lowerArmResetButton.get()) {
     		lowerArm.set(-1);
     	}
@@ -130,7 +136,7 @@ public class Arm extends Thread {
     	if(upperArmResetButton.get()) {
     		upperArm.set(0);
     		upperEncoder.reset();
-    	}
+    	}*/
     }
     public double getDistance(){
     	return round(lowerLength*Math.cos(getLowerAngle()))+(upperLength*Math.cos(180-(getLowerAngle()+getUpperAngle())));

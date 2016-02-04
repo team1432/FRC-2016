@@ -17,8 +17,8 @@ public class Encoder extends Thread {
 	double rotations;
 	double resetValue;
 	public static double degreesPerRotation = 360;
-	public static double inchesPerRotation = 0.8853826956614173;
-	public static double centemetersPerRotation = 2.24887204698;
+	public static double inchesPerRotation = 0.88;
+	public static double centemetersPerRotation = 2.24;
 	private ReentrantLock lock;
 	private Thread thread; 
 	private Boolean cont;
@@ -73,7 +73,7 @@ public class Encoder extends Thread {
     
     public double getRotations(){
     	lock.lock();
-    	double value =  /*round*/(rotations + current);
+    	double value =  round(rotations + current);
     	lock.unlock();
     	return value;
     }
@@ -102,7 +102,7 @@ public class Encoder extends Thread {
 		while(running) {
 			lock.lock();
 			ago1 = current;
-			current = (input.getAverageVoltage()/5-resetValue);
+			current = roundlong(input.getAverageVoltage()/5-resetValue);
 			//clockwise
 			if (current - ago1 < -.5) {
 				rotations++;
