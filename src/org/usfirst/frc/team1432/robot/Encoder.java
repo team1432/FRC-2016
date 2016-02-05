@@ -73,25 +73,25 @@ public class Encoder extends Thread {
     
     public double getRotations(){
     	lock.lock();
-    	double value =  round(rotations + current);
+    	double value =  rotations + current;
     	lock.unlock();
     	return value;
     }
 	public double getDegrees(){
 		lock.lock();
-		double value = round((current)*degreesPerRotation);
+		double value = (current)*degreesPerRotation;
 		lock.unlock();
 		return value;
 	}
 	public double getCM(){
 		lock.lock();
-		double value = round((current+rotations)*centemetersPerRotation);
+		double value = (current+rotations)*centemetersPerRotation;
 		lock.unlock();
 		return value;
 	}
 	public double getInches(){
 		lock.lock();
-		double value = round((current+rotations)*inchesPerRotation);
+		double value = (current+rotations)*inchesPerRotation;
 		lock.unlock();
 		return value;
 	}
@@ -102,7 +102,7 @@ public class Encoder extends Thread {
 		while(running) {
 			lock.lock();
 			ago1 = current;
-			current = roundlong(input.getAverageVoltage()/5-resetValue);
+			current = input.getAverageVoltage()/5-resetValue;
 			//clockwise
 			if (current - ago1 < -.5) {
 				rotations++;

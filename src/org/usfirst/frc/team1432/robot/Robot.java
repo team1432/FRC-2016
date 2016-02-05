@@ -141,8 +141,7 @@ public class Robot extends IterativeRobot {
     				Timer.delay(.02);
     				arm.setPosition(goal);
     			}
-    		}
-    		arm.setPosition(goal);
+    		} 
     		//Scheduler.getInstance().run();
     		//LiveWindow.run();
 		}
