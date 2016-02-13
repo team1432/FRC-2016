@@ -57,6 +57,8 @@ public class Robot extends IterativeRobot {
     	arm.start();
     	leftDriveEncoder = new Encoder(RobotMap.leftWheelEncoder);
     	rightDriveEncoder = new Encoder(RobotMap.rightWheelEncoder);
+    	leftDriveEncoder.start();
+    	rightDriveEncoder.start();
     }
 	
 	/**
@@ -83,10 +85,13 @@ public class Robot extends IterativeRobot {
 	public void autonomousInit() {
 		autonomousCommand = (String) chooser.getSelected();
 		print(autonomousCommand);
+    	leftDriveEncoder.reset();
+    	rightDriveEncoder.reset();
 		switch(autonomousCommand) {
 		case "Drive":
 			while(isAutonomous() && isEnabled()) {
-				drive.arcadeDrive(1, (leftDriveEncoder.getRotations() - rightDriveEncoder.getRotations())/2);
+				drive.arcadeDrive(0.5, (leftDriveEncoder.getRotations() + rightDriveEncoder.getRotations())/-2);
+				print((leftDriveEncoder.getRotations() + rightDriveEncoder.getRotations())/10);
 			}
 			break;
 		case "Short Drive":
@@ -111,6 +116,8 @@ public class Robot extends IterativeRobot {
     }
 
     public void teleopInit() {
+    	leftDriveEncoder.stoprun();
+    	rightDriveEncoder.stoprun();
     	print("Started Teleop");
     	drive();
     	oi.controller.setRumble(RumbleType.kLeftRumble, 1);
@@ -124,7 +131,7 @@ public class Robot extends IterativeRobot {
     	oi.controller.setRumble(RumbleType.kLeftRumble, 0);
     	oi.controller.setRumble(RumbleType.kRightRumble, 0);
     	while(isEnabled() && isOperatorControl()){
-    		print(arm.getUpperDegrees());
+    		print(leftDriveEncoder.getRotations());
     		drive();
     		if(oi.controller.getRawButton(1)) {
     			while(oi.controller.getRawButton(1)) {
@@ -173,7 +180,7 @@ public class Robot extends IterativeRobot {
     }
     
     public void drive() {
-    	drive.arcadeDrive(oi.controller, true);
+    	drive.arcadeDrive(-oi.controller.getRawAxis(1), -oi.controller.getRawAxis(0), true);
     }
     
 	public void print(String string) {
@@ -189,7 +196,8 @@ public class Robot extends IterativeRobot {
     }
     
     public void testInit() {
-    	
+    	leftDriveEncoder.reset();
+    	rightDriveEncoder.reset();
     }
     
     /**
@@ -197,6 +205,7 @@ public class Robot extends IterativeRobot {
      */
 
 	public void testPeriodic() {
-        LiveWindow.run();
-    }
+        //LiveWindow.run();
+    	print(leftDriveEncoder.getRotations());
+	}
 }

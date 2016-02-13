@@ -31,6 +31,7 @@ public class Encoder extends Thread {
 		ago1 = 0;
 		rotations = 0;
 		lock = new ReentrantLock();
+		reset();
 	}
 		
 	public void reset(){
@@ -102,12 +103,11 @@ public class Encoder extends Thread {
 		while(running) {
 			lock.lock();
 			ago1 = current;
-			current = input.getAverageVoltage()/5-resetValue;
-			//clockwise
-			if (current - ago1 < -.5) {
+			current = input.getVoltage()/5-resetValue;
+			if (current - ago1 < -.8) {
 				rotations++;
 			}
-			if (current - ago1 > .5) {
+			if (current - ago1 > .8) {
 				rotations--;
 			}
 			running = cont;
