@@ -2,15 +2,12 @@
 package org.usfirst.frc.team1432.robot;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Joystick.RumbleType;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.CANTalon;
-import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
-import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.CameraServer;
@@ -25,6 +22,7 @@ import org.usfirst.frc.team1432.robot.Encoder;
  * directory.
  */
 public class Robot extends IterativeRobot {
+	double Val;
 	Encoder leftDriveEncoder;
 	Encoder rightDriveEncoder;
 	CameraServer server;
@@ -54,11 +52,9 @@ public class Robot extends IterativeRobot {
         //the camera name (ex "cam0") can be found through the roborio web interface
         server.startAutomaticCapture("cam1");
     	arm = new Arm();
-    	arm.start();
+    	//arm.start();
     	leftDriveEncoder = new Encoder(RobotMap.leftWheelEncoder);
     	rightDriveEncoder = new Encoder(RobotMap.rightWheelEncoder);
-    	leftDriveEncoder.start();
-    	rightDriveEncoder.start();
     }
 	
 	/**
@@ -68,6 +64,8 @@ public class Robot extends IterativeRobot {
      */
     public void disabledInit(){
     	arm.reset();
+    	leftDriveEncoder.stoprun();
+    	rightDriveEncoder.stoprun();
     }
 	
 	public void disabledPeriodic() {
@@ -83,29 +81,43 @@ public class Robot extends IterativeRobot {
 	 * or additional comparisons to the switch structure below with additional strings & commands.
 	 */
 	public void autonomousInit() {
+    	leftDriveEncoder.start();
+    	rightDriveEncoder.start();
 		autonomousCommand = (String) chooser.getSelected();
 		print(autonomousCommand);
     	leftDriveEncoder.reset();
     	rightDriveEncoder.reset();
-		switch(autonomousCommand) {
+    	if(autonomousCommand == "Drive") {
+			while(isAutonomous() && isEnabled()) {
+				Val = -(rightDriveEncoder.getRotations()+leftDriveEncoder.getRotations());
+				drive.arcadeDrive(1, Val);
+				//print((leftDriveEncoder.getRotations() + rightDriveEncoder.getRotations())/-1);
+			}
+    	} else if(autonomousCommand == "Short Drive") {
+			while(isAutonomous() && isEnabled()) {
+				Val = -(rightDriveEncoder.getRotations()+leftDriveEncoder.getRotations());
+				drive.arcadeDrive(0.5, Val);
+				print(Val);
+			}    		
+    	}
+/*		switch(autonomousCommand) {
 		case "Drive":
-			while(isAutonomous() && isEnabled()) {
-				drive.arcadeDrive(0.5, (leftDriveEncoder.getRotations() + rightDriveEncoder.getRotations())/-2);
-				print((leftDriveEncoder.getRotations() + rightDriveEncoder.getRotations())/10);
+			while(true) {
+				drive.arcadeDrive(1, (leftDriveEncoder.getRotations() + rightDriveEncoder.getRotations())/-1);
+				print((leftDriveEncoder.getRotations() + rightDriveEncoder.getRotations())/-1);
 			}
-			break;
 		case "Short Drive":
-			while(isAutonomous() && isEnabled()) {
-				drive.arcadeDrive(0.5, 0);
+			while(true) {
+				drive.arcadeDrive(0.5, (leftDriveEncoder.getRotations() + rightDriveEncoder.getRotations())/-1);
+				print((leftDriveEncoder.getRotations() + rightDriveEncoder.getRotations())/-1);
 			}
-			break;
 		case "No Drive":
 		default:
 			while(isAutonomous() && isEnabled()) {
 				drive.arcadeDrive(0, 0);
 			}
 			break;
-		}
+		}*/
     }
 
     /**
@@ -181,6 +193,7 @@ public class Robot extends IterativeRobot {
     
     public void drive() {
     	drive.arcadeDrive(-oi.controller.getRawAxis(1), -oi.controller.getRawAxis(0), true);
+    	//drive.tankDrive(-oi.controller.getRawAxis(1), -oi.controller.getRawAxis(5), true);
     }
     
 	public void print(String string) {
