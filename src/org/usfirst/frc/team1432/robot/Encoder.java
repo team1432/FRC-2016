@@ -103,7 +103,7 @@ public class Encoder extends Thread {
 		while(running) {
 			lock.lock();
 			ago1 = current;
-			current = input.getVoltage()/5-resetValue;
+			current = (input.getVoltage()/5)-resetValue;
 			if (current - ago1 < -.8) {
 				rotations++;
 			}
@@ -112,6 +112,7 @@ public class Encoder extends Thread {
 			}
 			running = cont;
 			lock.unlock();
+			Timer.delay(.02);
 		}
 	}
 	
@@ -120,9 +121,15 @@ public class Encoder extends Thread {
 			cont=true;
 			thread = new Thread(this);
 			thread.start();
+		} else {
+			cont=true;
+			thread = null;
+			thread = new Thread(this);
+			thread.start();
 		}
 	}
 	public void stoprun() {
+		print("stoprun");
 		// TODO Auto-generated method stub
 		lock.lock();
 		cont = false;

@@ -4,7 +4,7 @@
 package org.usfirst.frc.team1432.robot;
 
 import java.util.concurrent.locks.ReentrantLock;
-
+import edu.wpi.first.wpilibj.IterativeRobot;
 import org.usfirst.frc.team1432.robot.*;
 import edu.wpi.first.wpilibj.*;
 import org.usfirst.frc.team1432.robot.Encoder;
@@ -24,25 +24,27 @@ public class Arm extends Thread {
     double lowerAngle;
     double upperAngle;
     double lowerMultiplier = 90;
-    double upperMultiplier = 112.5;
+    double upperMultiplier = 111;
     DigitalInput lowerArmResetButton;
     DigitalInput upperArmResetButton;
 	private Thread thread; 
 	private Boolean cont;
 	private ReentrantLock lock;
-	private double goal;
+	public double goal;
+	public boolean continueReset = false;
 	
     public Arm() {
     	lowerEncoder = new Encoder(RobotMap.lowerArmEncoder);
     	upperEncoder = new Encoder(RobotMap.upperArmEncoder);
     	lowerArm = new CANTalon (RobotMap.lowerArmMotor);
     	upperArm = new CANTalon (RobotMap.upperArmMotor);
+    	lowerArm.set(0);
+    	upperArm.set(0);
     	lowerArmResetButton = new DigitalInput(RobotMap.lowerArmButton);
     	upperArmResetButton = new DigitalInput(RobotMap.upperArmButton);
     	lowerEncoder.start();
     	upperEncoder.start();
     	lock = new ReentrantLock();
-    	reset();
     }
     
 	@Override
@@ -51,7 +53,7 @@ public class Arm extends Thread {
 		//keep position
 		while(running) {
 			lock.lock();
-			upperArm.set(-(goal - getUpperDegrees())/100);
+			upperArm.set((goal - getUpperDegrees())/70);
 			SafeDistance();
 			lock.unlock();
 		}
@@ -102,53 +104,67 @@ public class Arm extends Thread {
     	SafeDistance();
     }
     public double getLowerDegrees(){
-    	return lowerEncoder.getRotations()/**lowerMultiplier*/;
+    	return (lowerEncoder.getRotations())*lowerMultiplier-85;
     }
 
     public double getUpperDegrees(){
-    	return upperEncoder.getRotations()/**upperMultiplier*/;
+    	return (-upperEncoder.getRotations())*upperMultiplier+96;
     }
-    
+    public double getUpperRotations(){
+    	return (upperEncoder.getRotations());
+    }
+        
     public double getLowerAngle() {
-		return Math.toRadians(lowerEncoder.getRotations()*lowerMultiplier);
+		return Math.toRadians((lowerEncoder.getRotations())*lowerMultiplier-85);
     }
     public double getUpperAngle() {
-    	return Math.toRadians(upperEncoder.getRotations()*upperMultiplier);
+    	return Math.toRadians((-upperEncoder.getRotations())*upperMultiplier+96);
     }
     public void setPosition(double position){
     	goal = position;
 	}
     public void reset() {
-    	upperEncoder.reset();
-    	lowerEncoder.reset();
-    	goal = getUpperDegrees();
-    	/*
-    	while(!lowerArmResetButton.get()) {
-    		lowerArm.set(-1);
+    	while(lowerArmResetButton.get() && continueReset) {
+    		lowerArm.set(.2);
     	}
-    	if(lowerArmResetButton.get()) {
+    	if(!lowerArmResetButton.get()) {
     		lowerArm.set(0);
     		lowerEncoder.reset();
     	}
-    	while(!upperArmResetButton.get()) {
-    		upperArm.set(1);
+    	while(upperArmResetButton.get() && continueReset) {
+    		upperArm.set(.2);
     	}
-    	if(upperArmResetButton.get()) {
+    	if(!upperArmResetButton.get()) {
     		upperArm.set(0);
     		upperEncoder.reset();
-    	}*/
+    	}
+    	goal = getUpperDegrees();
+    }
+    public double getLowerDistance() {
+		return round(lowerLength*Math.sin(getLowerAngle()));
+    }
+    public double getUpperDistance() {
+    	return round(upperLength*Math.sin(getUpperAngle()));
     }
     public double getDistance(){
-    	return round(lowerLength*Math.cos(getLowerAngle()))+(upperLength*Math.cos(180-(getLowerAngle()+getUpperAngle())));
+    	return round(lowerLength*Math.sin(getLowerAngle()))+(upperLength*Math.sin(getUpperAngle()));
     }
     public void SafeDistance() {
-		distance = (lowerLength*Math.cos(getLowerAngle()))+(upperLength*Math.cos(180-(getLowerAngle()+getUpperAngle())));
+		distance = (lowerLength*Math.sin(getLowerAngle()))+(upperLength*Math.sin(getUpperAngle()));
 		if (distance > 14){
-			lowerArm.set(-.1);
+			lowerArm.set(.5);
 		}
 		if (distance < 13) {
-			lowerArm.set(.1);
+			lowerArm.set(-.5);
+		} else {
+			lowerArm.set(0);
 		}
-		lowerArm.set(0);    	
+		Timer.delay(0.1);
 	}
+    public void killEncoders() {
+    	if (upperEncoder != null) {
+    		upperEncoder.stoprun();
+    		lowerEncoder.stoprun();
+    	}
+    }
 }

@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.livewindow.*;
 import edu.wpi.first.wpilibj.CameraServer;
 import org.usfirst.frc.team1432.robot.Encoder;
 
@@ -50,11 +51,10 @@ public class Robot extends IterativeRobot {
         server = CameraServer.getInstance();
         server.setQuality(100);
         //the camera name (ex "cam0") can be found through the roborio web interface
-        server.startAutomaticCapture("cam1");
-    	arm = new Arm();
-    	//arm.start();
+        server.startAutomaticCapture("cam0");
     	leftDriveEncoder = new Encoder(RobotMap.leftWheelEncoder);
     	rightDriveEncoder = new Encoder(RobotMap.rightWheelEncoder);
+    	arm = new Arm();
     }
 	
 	/**
@@ -63,9 +63,12 @@ public class Robot extends IterativeRobot {
 	 * the robot is disabled.
      */
     public void disabledInit(){
-    	arm.reset();
-    	leftDriveEncoder.stoprun();
-    	rightDriveEncoder.stoprun();
+    	arm.stoprun();
+    	arm.continueReset = false;
+    	if (leftDriveEncoder != null) {
+    		leftDriveEncoder.stoprun();
+    		rightDriveEncoder.stoprun();
+    	}
     }
 	
 	public void disabledPeriodic() {
@@ -81,24 +84,36 @@ public class Robot extends IterativeRobot {
 	 * or additional comparisons to the switch structure below with additional strings & commands.
 	 */
 	public void autonomousInit() {
-    	leftDriveEncoder.start();
-    	rightDriveEncoder.start();
+		arm.continueReset = true;
+		print("autoInit");
+		arm.reset();
+    	arm.start();
 		autonomousCommand = (String) chooser.getSelected();
 		print(autonomousCommand);
-    	leftDriveEncoder.reset();
-    	rightDriveEncoder.reset();
     	if(autonomousCommand == "Drive") {
+	    	leftDriveEncoder.start();
+	    	rightDriveEncoder.start();
+	    	leftDriveEncoder.reset();
+	    	rightDriveEncoder.reset();
 			while(isAutonomous() && isEnabled()) {
 				Val = -(rightDriveEncoder.getRotations()+leftDriveEncoder.getRotations());
 				drive.arcadeDrive(1, Val);
 				//print((leftDriveEncoder.getRotations() + rightDriveEncoder.getRotations())/-1);
 			}
     	} else if(autonomousCommand == "Short Drive") {
+	    	leftDriveEncoder.start();
+	    	rightDriveEncoder.start();
+	    	leftDriveEncoder.reset();
+	    	rightDriveEncoder.reset();
 			while(isAutonomous() && isEnabled()) {
 				Val = -(rightDriveEncoder.getRotations()+leftDriveEncoder.getRotations());
 				drive.arcadeDrive(0.5, Val);
 				print(Val);
 			}    		
+    	} else {
+    		while(isAutonomous() && isEnabled()) {
+    			drive.arcadeDrive(0,0);
+    		}
     	}
 /*		switch(autonomousCommand) {
 		case "Drive":
@@ -128,6 +143,11 @@ public class Robot extends IterativeRobot {
     }
 
     public void teleopInit() {
+    	arm.continueReset = true;
+    	arm.reset();
+    	drive();
+    	arm.continueReset = false;
+    	arm.start();
     	leftDriveEncoder.stoprun();
     	rightDriveEncoder.stoprun();
     	print("Started Teleop");
@@ -143,20 +163,20 @@ public class Robot extends IterativeRobot {
     	oi.controller.setRumble(RumbleType.kLeftRumble, 0);
     	oi.controller.setRumble(RumbleType.kRightRumble, 0);
     	while(isEnabled() && isOperatorControl()){
-    		print(leftDriveEncoder.getRotations());
     		drive();
-    		if(oi.controller.getRawButton(1)) {
+    		print(Double.toString(arm.goal) + "---" + Double.toString(arm.getLowerDistance()) + "---" + Double.toString(arm.getUpperDistance()) + "---" + Double.toString(arm.getUpperDistance()+arm.getLowerDistance()));
+    		if(oi.controller.getRawButton(4)) {
     			while(oi.controller.getRawButton(1)) {
     				drive();
-    				goal -=1;
+    				goal = arm.goal - .25;
     				Timer.delay(.02);
     				arm.setPosition(goal);
     			}
     		}
-    		if(oi.controller.getRawButton(4)) {
+    		if(oi.controller.getRawButton(1)) {
     			while(oi.controller.getRawButton(4)) {
     				drive();
-    				goal +=1;
+    				goal = arm.goal + .25;
     				Timer.delay(.02);
     				arm.setPosition(goal);
     			}
@@ -192,6 +212,7 @@ public class Robot extends IterativeRobot {
     }
     
     public void drive() {
+    	//drive.arcadeDrive(0, 0);
     	drive.arcadeDrive(-oi.controller.getRawAxis(1), -oi.controller.getRawAxis(0), true);
     	//drive.tankDrive(-oi.controller.getRawAxis(1), -oi.controller.getRawAxis(5), true);
     }
@@ -209,8 +230,10 @@ public class Robot extends IterativeRobot {
     }
     
     public void testInit() {
-    	leftDriveEncoder.reset();
-    	rightDriveEncoder.reset();
+    	
+    	//leftDriveEncoder.reset();
+    	//rightDriveEncoder.reset();
+    	//arm = new Arm();
     }
     
     /**
@@ -218,7 +241,6 @@ public class Robot extends IterativeRobot {
      */
 
 	public void testPeriodic() {
-        //LiveWindow.run();
-    	print(leftDriveEncoder.getRotations());
+        LiveWindow.run();
 	}
 }
