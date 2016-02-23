@@ -40,7 +40,8 @@ public class Robot extends IterativeRobot {
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
-    public void robotInit() {    	
+    public void robotInit() {
+    	print("Robot Init");
     	oi = new OI();
 		setupdrive();
         chooser = new SendableChooser();
@@ -63,6 +64,7 @@ public class Robot extends IterativeRobot {
 	 * the robot is disabled.
      */
     public void disabledInit(){
+    	print("disabled start");
     	arm.stoprun();
     	arm.continueReset = false;
     	if (leftDriveEncoder != null) {
@@ -84,65 +86,41 @@ public class Robot extends IterativeRobot {
 	 * or additional comparisons to the switch structure below with additional strings & commands.
 	 */
 	public void autonomousInit() {
+		print("Autonomous Init");
 		arm.continueReset = true;
-		print("autoInit");
 		arm.reset();
     	arm.start();
 		autonomousCommand = (String) chooser.getSelected();
 		print(autonomousCommand);
-    	if(autonomousCommand == "Drive") {
-	    	leftDriveEncoder.start();
-	    	rightDriveEncoder.start();
-	    	leftDriveEncoder.reset();
-	    	rightDriveEncoder.reset();
-			while(isAutonomous() && isEnabled()) {
-				Val = -(rightDriveEncoder.getRotations()+leftDriveEncoder.getRotations());
-				drive.arcadeDrive(1, Val);
-				//print((leftDriveEncoder.getRotations() + rightDriveEncoder.getRotations())/-1);
-			}
-    	} else if(autonomousCommand == "Short Drive") {
-	    	leftDriveEncoder.start();
-	    	rightDriveEncoder.start();
-	    	leftDriveEncoder.reset();
-	    	rightDriveEncoder.reset();
-			while(isAutonomous() && isEnabled()) {
-				Val = -(rightDriveEncoder.getRotations()+leftDriveEncoder.getRotations());
-				drive.arcadeDrive(0.5, Val);
-				print(Val);
-			}    		
-    	} else {
-    		while(isAutonomous() && isEnabled()) {
-    			drive.arcadeDrive(0,0);
-    		}
-    	}
-/*		switch(autonomousCommand) {
-		case "Drive":
-			while(true) {
-				drive.arcadeDrive(1, (leftDriveEncoder.getRotations() + rightDriveEncoder.getRotations())/-1);
-				print((leftDriveEncoder.getRotations() + rightDriveEncoder.getRotations())/-1);
-			}
-		case "Short Drive":
-			while(true) {
-				drive.arcadeDrive(0.5, (leftDriveEncoder.getRotations() + rightDriveEncoder.getRotations())/-1);
-				print((leftDriveEncoder.getRotations() + rightDriveEncoder.getRotations())/-1);
-			}
-		case "No Drive":
-		default:
-			while(isAutonomous() && isEnabled()) {
-				drive.arcadeDrive(0, 0);
-			}
-			break;
-		}*/
     }
 
     /**
      * This function is called periodically during autonomous
      */
     public void autonomousPeriodic() {
-        Scheduler.getInstance().run();
+    	if(autonomousCommand == "Drive") {
+	    	leftDriveEncoder.start();
+	    	rightDriveEncoder.start();
+	    	leftDriveEncoder.reset();
+	    	rightDriveEncoder.reset();
+			Val = -(rightDriveEncoder.getRotations()+leftDriveEncoder.getRotations());
+			drive.arcadeDrive(1, Val);
+    	} else if(autonomousCommand == "Short Drive") {
+	    	leftDriveEncoder.start();
+	    	rightDriveEncoder.start();
+	    	leftDriveEncoder.reset();
+	    	rightDriveEncoder.reset();
+			Val = -(rightDriveEncoder.getRotations()+leftDriveEncoder.getRotations());
+			drive.arcadeDrive(0.5, Val);
+			print(Val);
+    	} else {
+			drive.arcadeDrive(0,0);
+			print("driving 0");
+    	}
     }
 
     public void teleopInit() {
+    	print("Teleop Init");
     	arm.continueReset = true;
     	arm.reset();
     	drive();
@@ -162,28 +140,6 @@ public class Robot extends IterativeRobot {
     	drive();
     	oi.controller.setRumble(RumbleType.kLeftRumble, 0);
     	oi.controller.setRumble(RumbleType.kRightRumble, 0);
-    	while(isEnabled() && isOperatorControl()){
-    		drive();
-    		print(Double.toString(arm.goal) + "---" + Double.toString(arm.getLowerDistance()) + "---" + Double.toString(arm.getUpperDistance()) + "---" + Double.toString(arm.getUpperDistance()+arm.getLowerDistance()));
-    		if(oi.controller.getRawButton(4)) {
-    			while(oi.controller.getRawButton(1)) {
-    				drive();
-    				goal = arm.goal - .25;
-    				Timer.delay(.02);
-    				arm.setPosition(goal);
-    			}
-    		}
-    		if(oi.controller.getRawButton(1)) {
-    			while(oi.controller.getRawButton(4)) {
-    				drive();
-    				goal = arm.goal + .25;
-    				Timer.delay(.02);
-    				arm.setPosition(goal);
-    			}
-    		} 
-    		//Scheduler.getInstance().run();
-    		//LiveWindow.run();
-		}
 
     	// This makes sure that the autonomous stops running when
         // teleop starts running. If you want the autonomous to 
@@ -195,7 +151,44 @@ public class Robot extends IterativeRobot {
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
-    	
+		drive();
+		print(Double.toString(arm.XGoal) + "---" + Double.toString(arm.getDistance()));
+		if(oi.controller.getRawButton(1)) {
+			print("A");
+			//down
+			while(oi.controller.getRawButton(1)) {
+				drive();
+				arm.YGoal += .5;
+				Timer.delay(.02);
+			}
+		}
+		if(oi.controller.getRawButton(4)) {
+			print("Y");
+			//up
+			while(oi.controller.getRawButton(4)) {
+				drive();
+				arm.YGoal -= .5;
+				Timer.delay(.02);
+			}
+		}
+		if(oi.controller.getRawButton(2)) {
+			print("B");
+			//out
+			while(oi.controller.getRawButton(2)) {
+				drive();
+				arm.XGoal += .25;
+				Timer.delay(.02);
+			}
+		}
+		if(oi.controller.getRawButton(3)) {
+			print("X");
+			//in
+			while(oi.controller.getRawButton(3)) {
+				drive();
+				arm.XGoal -= .25;
+				Timer.delay(.02);	
+			}
+		}
     }
     
     public double round(double value) {

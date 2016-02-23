@@ -30,7 +30,8 @@ public class Arm extends Thread {
 	private Thread thread; 
 	private Boolean cont;
 	private ReentrantLock lock;
-	public double goal;
+	public double YGoal;
+	public double XGoal;
 	public boolean continueReset = false;
 	
     public Arm() {
@@ -46,16 +47,23 @@ public class Arm extends Thread {
     	upperEncoder.start();
     	lock = new ReentrantLock();
     }
-    
+
 	@Override
 	public void run() {
 		Boolean running = cont;
 		//keep position
 		while(running) {
 			lock.lock();
-			upperArm.set((goal - getUpperDegrees())/70);
-			SafeDistance();
+			if (XGoal > 14) {
+				XGoal = 14;
+			}
+			//if (!lowerArmResetButton.get()) {
+			//	XGoal = getDistance();
+			//}
+			upperArm.set((YGoal - getUpperDegrees())/20);
+			lowerArm.set(-(XGoal - getDistance())/10);
 			lock.unlock();
+			Timer.delay(.02);
 		}
 	}
 	
@@ -120,12 +128,9 @@ public class Arm extends Thread {
     public double getUpperAngle() {
     	return Math.toRadians((-upperEncoder.getRotations())*upperMultiplier+96);
     }
-    public void setPosition(double position){
-    	goal = position;
-	}
     public void reset() {
     	while(lowerArmResetButton.get() && continueReset) {
-    		lowerArm.set(.2);
+    		lowerArm.set(.5);
     	}
     	if(!lowerArmResetButton.get()) {
     		lowerArm.set(0);
@@ -138,7 +143,8 @@ public class Arm extends Thread {
     		upperArm.set(0);
     		upperEncoder.reset();
     	}
-    	goal = getUpperDegrees();
+    	YGoal = getUpperDegrees();
+    	XGoal = getDistance();
     }
     public double getLowerDistance() {
 		return round(lowerLength*Math.sin(getLowerAngle()));

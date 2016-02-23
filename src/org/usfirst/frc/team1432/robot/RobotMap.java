@@ -28,7 +28,7 @@ public class RobotMap {
     public static int upperArmButton = 1;
     
     ////////////// Lengths ///////////////
-    public static double upperArmLength = 23.5;
+    public static double upperArmLength = 25.5;
     public static double lowerArmLength = 14.25;
     
     // If you are using multiple modules, make sure to define both the port
