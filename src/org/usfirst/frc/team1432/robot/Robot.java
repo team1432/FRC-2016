@@ -56,6 +56,7 @@ public class Robot extends IterativeRobot {
     	leftDriveEncoder = new Encoder(RobotMap.leftWheelEncoder);
     	rightDriveEncoder = new Encoder(RobotMap.rightWheelEncoder);
     	arm = new Arm();
+    	arm.start();
     }
 	
 	/**
@@ -63,9 +64,8 @@ public class Robot extends IterativeRobot {
      * You can use it to reset any subsystem information you want to clear when
 	 * the robot is disabled.
      */
-    public void disabledInit(){
+    public void disabledInit() {
     	print("disabled start");
-    	arm.stoprun();
     	arm.continueReset = false;
     	if (leftDriveEncoder != null) {
     		leftDriveEncoder.stoprun();
@@ -89,9 +89,13 @@ public class Robot extends IterativeRobot {
 		print("Autonomous Init");
 		arm.continueReset = true;
 		arm.reset();
-    	arm.start();
+    	
 		autonomousCommand = (String) chooser.getSelected();
 		print(autonomousCommand);
+    	leftDriveEncoder.start();
+    	rightDriveEncoder.start();
+    	leftDriveEncoder.reset();
+    	rightDriveEncoder.reset();
     }
 
     /**
@@ -99,20 +103,12 @@ public class Robot extends IterativeRobot {
      */
     public void autonomousPeriodic() {
     	if(autonomousCommand == "Drive") {
-	    	leftDriveEncoder.start();
-	    	rightDriveEncoder.start();
-	    	leftDriveEncoder.reset();
-	    	rightDriveEncoder.reset();
-			Val = -(rightDriveEncoder.getRotations()+leftDriveEncoder.getRotations());
+			Val = -(rightDriveEncoder.getRotations()+leftDriveEncoder.getRotations()/5);
 			drive.arcadeDrive(1, Val);
     	} else if(autonomousCommand == "Short Drive") {
-	    	leftDriveEncoder.start();
-	    	rightDriveEncoder.start();
-	    	leftDriveEncoder.reset();
-	    	rightDriveEncoder.reset();
-			Val = -(rightDriveEncoder.getRotations()+leftDriveEncoder.getRotations());
+			Val = -(rightDriveEncoder.getRotations()+leftDriveEncoder.getRotations()/5);
 			drive.arcadeDrive(0.5, Val);
-			print(Val);
+			print(Double.toString(leftDriveEncoder.getRotations()) + "---" + Double.toString(rightDriveEncoder.getRotations()));
     	} else {
 			drive.arcadeDrive(0,0);
 			print("driving 0");
@@ -124,14 +120,15 @@ public class Robot extends IterativeRobot {
     	arm.continueReset = true;
     	arm.reset();
     	drive();
-    	arm.continueReset = false;
-    	arm.start();
     	leftDriveEncoder.stoprun();
     	rightDriveEncoder.stoprun();
-    	print("Started Teleop");
     	drive();
     	oi.controller.setRumble(RumbleType.kLeftRumble, 1);
     	oi.controller.setRumble(RumbleType.kRightRumble, 1);
+    	Timer.delay(0.05);
+    	drive();
+    	Timer.delay(0.05);
+    	drive();
     	Timer.delay(0.05);
     	drive();
     	Timer.delay(0.05);
@@ -152,7 +149,17 @@ public class Robot extends IterativeRobot {
      */
     public void teleopPeriodic() {
 		drive();
-		print(Double.toString(arm.XGoal) + "---" + Double.toString(arm.getDistance()));
+		print(Double.toString(arm.YGoal) + "---" + Double.toString(arm.getUpperDegrees()) + "---" + Double.toString(arm.getDistance()) + "---" + Double.toString(arm.XGoal));
+		if(oi.controller.getRawButton(8)) {
+			print("reset");
+			arm.reset();
+		}
+		if(oi.controller.getRawButton(6)) {
+			while(oi.controller.getRawButton(6)) {
+				drive();
+			}
+			arm.setupPortcullis();
+		}
 		if(oi.controller.getRawButton(1)) {
 			print("A");
 			//down
@@ -214,7 +221,7 @@ public class Robot extends IterativeRobot {
     	System.out.println(string);
     }
     
-    public void print(double Double){
+    public void print(double Double) {
     	System.out.println(round(Double));
     }
     
