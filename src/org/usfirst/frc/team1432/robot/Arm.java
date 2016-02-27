@@ -78,8 +78,10 @@ public class Arm extends Thread {
 	
 	public void start() {
 		print("Arm Starting");
-    	lowerEncoder.start();
-    	upperEncoder.start();
+		if(lowerEncoder != null) {
+	    	lowerEncoder.start();
+	    	upperEncoder.start();			
+		}
 		if(thread == null) {
 			lock.lock();
 			cont=true;
