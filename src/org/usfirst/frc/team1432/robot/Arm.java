@@ -35,10 +35,12 @@ public class Arm extends Thread {
 	public boolean continueReset = false;
 	double encoderValue;
 	public boolean canMove;
-	double lowerArmSpeed = 40;
+	double lowerArmSpeed = 75;
+	public static OI _oi;
+    private long startTime;
+    private static long resetLimitMillis = 4000;
 	
-	
-    public Arm() {
+    public Arm(OI oi) {
     	lowerEncoder = new Encoder(RobotMap.lowerArmEncoder);
     	upperEncoder = new Encoder(RobotMap.upperArmEncoder);
     	lowerArm = new CANTalon (RobotMap.lowerArmMotor);
@@ -48,8 +50,8 @@ public class Arm extends Thread {
     	lowerArmResetButton = new DigitalInput(RobotMap.lowerArmButton);
     	upperArmResetButton = new DigitalInput(RobotMap.upperArmButton);
     	lock = new ReentrantLock();
+    	_oi = oi;
     }
-
 	@Override
 	public void run() {
 		Boolean running = cont;
@@ -67,9 +69,9 @@ public class Arm extends Thread {
 				if (!lowerArmResetButton.get() && XGoal - getDistance() < 0) {
 					lowerArm.set(0);
 				} else {
-					upperArm.set((YGoal - getUpperDegrees())/50);
+					upperArm.set((YGoal - getUpperDegrees())/75);
 					lowerArm.set(-(XGoal - getDistance())/lowerArmSpeed);
-				}	
+				}
 			}
 			running = cont;
 			lock.unlock();
@@ -172,25 +174,28 @@ public class Arm extends Thread {
     public double getUpperAngle() {
     	return Math.toRadians((-upperEncoder.getRotations())*upperMultiplier+96);
     }
-    public void reset() {
+    public boolean reset() {
     	canMove = false;
+    	startTime = System.currentTimeMillis();
     	if(continueReset) {
        		print("Arm is going in reverse");
     		upperArm.set(-.5);
     		Timer.delay(.5);
     	}
     	upperArm.set(0);
-    	while(lowerArmResetButton.get() && continueReset) {
-    		lowerArm.set(.5);
+    	while(lowerArmResetButton.get() && continueReset && !_oi.controller.getRawButton(7)) {
+    		if(System.currentTimeMillis() - startTime < resetLimitMillis) lowerArm.set(.5);
+    		else return false;
     	}
-    	if(!lowerArmResetButton.get()) {
+    	if(!lowerArmResetButton.get() && continueReset) {
     		lowerArm.set(0);
     		lowerEncoder.reset();
     	}
-    	while(upperArmResetButton.get() && continueReset) {
-    		upperArm.set(.2);
+    	while(upperArmResetButton.get() && continueReset && !_oi.controller.getRawButton(7)) {
+    		if(System.currentTimeMillis() - startTime < resetLimitMillis) upperArm.set(.2);
+    		else return false;
     	}
-    	if(!upperArmResetButton.get()) {
+    	if(!upperArmResetButton.get() && continueReset) {
     		upperArm.set(0);
     		upperEncoder.reset();
     	}
@@ -198,6 +203,7 @@ public class Arm extends Thread {
     	XGoal = getDistance();
     	print("Finished Reset");
     	canMove = true;
+    	return true;
     }
     public double getLowerDistance() {
 		return round(lowerLength*Math.sin(getLowerAngle()));

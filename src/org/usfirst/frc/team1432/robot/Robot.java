@@ -36,6 +36,12 @@ public class Robot extends IterativeRobot {
     CANTalon talon = new CANTalon(2);
     Arm arm;
     double goal;
+    private long startTime;
+    private long timePassed;
+    static long shortDriveTime = 500;
+    static long slowDriveTime = 4000;
+    static long mediumDriveTime = 3000;
+    static long fastDriveTime = 3000;
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
@@ -45,9 +51,11 @@ public class Robot extends IterativeRobot {
     	oi = new OI();
 		setupdrive();
         chooser = new SendableChooser();
-        chooser.addDefault("No Drive", "No Drive");
-        chooser.addObject("Drive", "Drive");
+        chooser.addDefault("Portcullis, Cheval de Frise, Drawbridge, Sally Port", "No Drive");
         chooser.addObject("Short Drive", "Short Drive");
+        chooser.addObject("Low bar", "Slow Drive");
+        chooser.addObject("Moat, Ramps, Rough Terrain", "Medium Drive");
+        chooser.addObject("Rock Wall", "Fast Drive");
         SmartDashboard.putData("Auto mode", chooser);
         server = CameraServer.getInstance();
         server.setQuality(100);
@@ -55,7 +63,7 @@ public class Robot extends IterativeRobot {
         server.startAutomaticCapture("cam0");
     	leftDriveEncoder = new Encoder(RobotMap.leftWheelEncoder);
     	rightDriveEncoder = new Encoder(RobotMap.rightWheelEncoder);
-    	arm = new Arm();
+    	arm = new Arm(oi);
     	arm.start();
     }
 	
@@ -87,38 +95,65 @@ public class Robot extends IterativeRobot {
 	 */
 	public void autonomousInit() {
 		print("Autonomous Init");
-		arm.continueReset = true;
-		arm.reset();
-    	
 		autonomousCommand = (String) chooser.getSelected();
 		print(autonomousCommand);
+		if(autonomousCommand == "Slow Drive") {
+			arm.continueReset = true;
+			if(arm.reset()) { //if it was a success
+				print("Arm reset passed");
+			} else { //ran out of time
+				print("Arm reset ran out of time");
+				return; //don't continue to drive forward
+			}
+		}
     	leftDriveEncoder.start();
     	rightDriveEncoder.start();
     	leftDriveEncoder.reset();
     	rightDriveEncoder.reset();
+    	startTime = System.currentTimeMillis();
     }
 
     /**
      * This function is called periodically during autonomous
      */
     public void autonomousPeriodic() {
-    	if(autonomousCommand == "Drive") {
-			Val = -(rightDriveEncoder.getRotations()+leftDriveEncoder.getRotations()/5);
-			drive.arcadeDrive(1, Val);
-    	} else if(autonomousCommand == "Short Drive") {
-			Val = -(rightDriveEncoder.getRotations()+leftDriveEncoder.getRotations()/5);
-			drive.arcadeDrive(0.5, Val);
-			print(Double.toString(leftDriveEncoder.getRotations()) + "---" + Double.toString(rightDriveEncoder.getRotations()));
-    	} else {
-			drive.arcadeDrive(0,0);
-			print("driving 0");
+    	timePassed = System.currentTimeMillis() - startTime;
+		Val = -(rightDriveEncoder.getRotations() + leftDriveEncoder.getRotations()/5);
+    	switch(autonomousCommand) {
+    		case "Short Drive":
+    			if(timePassed < shortDriveTime) {
+    				drive.arcadeDrive(.25, Val);
+    			} else drive.arcadeDrive(0,0);
+    			
+    		case "Slow Drive":
+    			if(timePassed < slowDriveTime) {
+    				drive.arcadeDrive(.25, Val);
+    			} else drive.arcadeDrive(0,0);
+    			
+    		case "Medium Drive":
+    			if(timePassed < mediumDriveTime) {
+    				drive.arcadeDrive(.5, Val);
+    			} else drive.arcadeDrive(0,0);
+    			
+    		case "Fast Drive":
+    			if(timePassed < fastDriveTime) {
+    				drive.arcadeDrive(1, Val);
+    			} else drive.arcadeDrive(0,0);
+    			
+    		case "No Drive":
+    		default:
+    			drive.arcadeDrive(0,0);
     	}
     }
 
     public void teleopInit() {
     	print("Teleop Init");
     	arm.continueReset = true;
-    	arm.reset();
+		if(arm.reset()) { //if it was a success
+			print("Arm reset passed");
+		} else { //ran out of time
+			print("Arm reset ran out of time");
+		}
     	drive();
     	leftDriveEncoder.stoprun();
     	rightDriveEncoder.stoprun();
@@ -152,49 +187,41 @@ public class Robot extends IterativeRobot {
 		print(Double.toString(arm.YGoal) + "---" + Double.toString(arm.getUpperDegrees()) + "---" + Double.toString(arm.getDistance()) + "---" + Double.toString(arm.XGoal));
 		if(oi.controller.getRawButton(8)) {
 			print("reset");
-			arm.reset();
+			if(arm.reset()) { //if it was a success
+				print("Arm reset passed");
+			} else { //ran out of time
+				print("Arm reset ran out of time");
+			}
 		}
-		if(oi.controller.getRawButton(6)) {
+		if(oi.controller.getRawButton(7)) {
+			print("cancel reset");
+			arm.continueReset = false;
+		}
+		/*if(oi.controller.getRawButton(6)) {
 			while(oi.controller.getRawButton(6)) {
 				drive();
 			}
 			arm.setupPortcullis();
-		}
+		}*/
 		if(oi.controller.getRawButton(1)) {
 			print("A");
 			//down
-			while(oi.controller.getRawButton(1)) {
-				drive();
-				arm.YGoal += .5;
-				Timer.delay(.02);
-			}
+			arm.YGoal += .5;
 		}
 		if(oi.controller.getRawButton(4)) {
 			print("Y");
 			//up
-			while(oi.controller.getRawButton(4)) {
-				drive();
-				arm.YGoal -= .5;
-				Timer.delay(.02);
-			}
+			arm.YGoal -= .5;
 		}
 		if(oi.controller.getRawButton(2)) {
 			print("B");
 			//out
-			while(oi.controller.getRawButton(2)) {
-				drive();
-				arm.XGoal += .25;
-				Timer.delay(.02);
-			}
+			arm.XGoal += .25;
 		}
 		if(oi.controller.getRawButton(3)) {
 			print("X");
 			//in
-			while(oi.controller.getRawButton(3)) {
-				drive();
-				arm.XGoal -= .25;
-				Timer.delay(.02);	
-			}
+			arm.XGoal -= .25;
 		}
     }
     
@@ -230,7 +257,6 @@ public class Robot extends IterativeRobot {
     }
     
     public void testInit() {
-    	
     	//leftDriveEncoder.reset();
     	//rightDriveEncoder.reset();
     	//arm = new Arm();
