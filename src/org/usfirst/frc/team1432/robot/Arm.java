@@ -35,7 +35,8 @@ public class Arm extends Thread {
 	public boolean continueReset = false;
 	double encoderValue;
 	public boolean canMove;
-	double lowerArmSpeed = 75;
+	double originalLowerArmSpeed;
+	double lowerArmSpeed = 15;
 	public static OI _oi;
     private long startTime;
     private static long resetLimitMillis = 4000;
@@ -69,7 +70,7 @@ public class Arm extends Thread {
 				if (!lowerArmResetButton.get() && XGoal - getDistance() < 0) {
 					lowerArm.set(0);
 				} else {
-					upperArm.set((YGoal - getUpperDegrees())/75);
+					upperArm.set((YGoal - getUpperDegrees())/60);
 					lowerArm.set(-(XGoal - getDistance())/lowerArmSpeed);
 				}
 			}
@@ -136,16 +137,37 @@ public class Arm extends Thread {
     		return false;
     	}
     }
+    public boolean isAtYGoal() {
+    	if(getUpperDegrees() > YGoal - 5 && getUpperDegrees() < YGoal + 5) {
+    		return true;
+    	}
+    	else {
+    		return false;
+    	}
+    }
     public void setupPortcullis() {
     	reset();
-    	XGoal = 10.5;
+    	originalLowerArmSpeed = lowerArmSpeed;
     	lowerArmSpeed = 5;
+    	XGoal = 10;
     	while (!isAtXGoal() && continueReset) {
-    		print("not at goal yet");
+    		print("not at X goal 1 yet");
     		Timer.delay(.02);
     	}
     	print("Got to the position");
-    	lowerArmSpeed = 8;
+    	YGoal = 130;
+    	while (!isAtYGoal() && continueReset) {
+    		print("not at Y goal yet");
+    		Timer.delay(.02);
+    	}
+    	print("Got to the position");
+    	XGoal = 4.4;
+    	while (!isAtXGoal() && continueReset) {
+    		print("not at X goal 2 yet");
+    		Timer.delay(.02);
+    	}
+    	print("Got to the position");
+    	lowerArmSpeed = originalLowerArmSpeed;
     }
     public void set(double speed) {
     	if (speed < -1) {

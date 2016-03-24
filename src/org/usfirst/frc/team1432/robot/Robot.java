@@ -26,7 +26,8 @@ public class Robot extends IterativeRobot {
 	double Val;
 	Encoder leftDriveEncoder;
 	Encoder rightDriveEncoder;
-	CameraServer server;
+	//CameraServer server1;
+	CameraServer server2;
 	RobotDrive drive;
 	public static OI oi;
     String autonomousCommand;
@@ -38,10 +39,10 @@ public class Robot extends IterativeRobot {
     double goal;
     private long startTime;
     private long timePassed;
-    static long shortDriveTime = 500;
+    static long shortDriveTime = 3500;
     static long slowDriveTime = 4000;
-    static long mediumDriveTime = 3000;
-    static long fastDriveTime = 3000;
+    static long mediumDriveTime = 2750;
+    static long fastDriveTime = 2500;
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
@@ -51,16 +52,19 @@ public class Robot extends IterativeRobot {
     	oi = new OI();
 		setupdrive();
         chooser = new SendableChooser();
-        chooser.addDefault("Portcullis, Cheval de Frise, Drawbridge, Sally Port", "No Drive");
-        chooser.addObject("Short Drive", "Short Drive");
+        chooser.addDefault("No Drive", "No Drive");
+        chooser.addObject("Portcullis, Cheval de Frise, Drawbridge, Sally Port", "Short Drive");
         chooser.addObject("Low bar", "Slow Drive");
         chooser.addObject("Moat, Ramps, Rough Terrain", "Medium Drive");
         chooser.addObject("Rock Wall", "Fast Drive");
         SmartDashboard.putData("Auto mode", chooser);
-        server = CameraServer.getInstance();
-        server.setQuality(100);
+        //server1 = CameraServer.getInstance();
+        server2 = CameraServer.getInstance();
+        //server1.setQuality(100);
+        server2.setQuality(100);
         //the camera name (ex "cam0") can be found through the roborio web interface
-        server.startAutomaticCapture("cam0");
+        //server1.startAutomaticCapture("cam0");
+        server2.startAutomaticCapture("cam0");
     	leftDriveEncoder = new Encoder(RobotMap.leftWheelEncoder);
     	rightDriveEncoder = new Encoder(RobotMap.rightWheelEncoder);
     	arm = new Arm(oi);
@@ -118,28 +122,30 @@ public class Robot extends IterativeRobot {
      */
     public void autonomousPeriodic() {
     	timePassed = System.currentTimeMillis() - startTime;
-		Val = -(rightDriveEncoder.getRotations() + leftDriveEncoder.getRotations()/5);
+		//Val = -(rightDriveEncoder.getRotations() + leftDriveEncoder.getRotations()/5);
+		Val = 0;
+    	print(Val + "---" + leftDriveEncoder.getRotations() + "---" + rightDriveEncoder.getRotations());
     	switch(autonomousCommand) {
     		case "Short Drive":
     			if(timePassed < shortDriveTime) {
-    				drive.arcadeDrive(.25, Val);
-    			} else drive.arcadeDrive(0,0);
-    			
+    				drive.arcadeDrive(.5, Val);
+    			} else drive.arcadeDrive(.25,0);
+    		break;
     		case "Slow Drive":
     			if(timePassed < slowDriveTime) {
-    				drive.arcadeDrive(.25, Val);
-    			} else drive.arcadeDrive(0,0);
-    			
+    				drive.arcadeDrive(.65, Val);
+    			} else drive.arcadeDrive(.25,0);
+    		break;
     		case "Medium Drive":
     			if(timePassed < mediumDriveTime) {
-    				drive.arcadeDrive(.5, Val);
+    				drive.arcadeDrive(.75, Val);
     			} else drive.arcadeDrive(0,0);
-    			
+    		break;
     		case "Fast Drive":
     			if(timePassed < fastDriveTime) {
-    				drive.arcadeDrive(1, Val);
+    				drive.arcadeDrive(.9, Val);
     			} else drive.arcadeDrive(0,0);
-    			
+    		break;
     		case "No Drive":
     		default:
     			drive.arcadeDrive(0,0);
@@ -197,12 +203,12 @@ public class Robot extends IterativeRobot {
 			print("cancel reset");
 			arm.continueReset = false;
 		}
-		/*if(oi.controller.getRawButton(6)) {
+		if(oi.controller.getRawButton(6)) {
 			while(oi.controller.getRawButton(6)) {
 				drive();
 			}
 			arm.setupPortcullis();
-		}*/
+		}
 		if(oi.controller.getRawButton(1)) {
 			print("A");
 			//down
